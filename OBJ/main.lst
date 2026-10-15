@@ -1,0 +1,124 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              10/15/2026 13:49:18 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USER;..\FUNC_HANDLER
+                    -;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\mai
+                    -n.obj)
+
+line level    source
+
+   1          #include "main.h"
+   2          #include "string.h"
+   3          
+   4          
+   5          /**************************************************
+   6          触摸地址设置在#include "func_handler.h"
+   7          显示变量地址在#include "start_win.h"
+   8          
+   9          //点击按键处理回调函数
+  10          void btn_click_callback(u16 addr,u16 val)
+  11          
+  12          **************************************************/
+  13          SysDataDef xdata str_sys;
+  14          
+  15          
+  16          int i=0;
+  17          void Init_Rtu_RegHoldingBuf(SysDataDef* dat)
+  18          {
+  19   1        usRegHoldingBuf[ADDR_MOTOR_GET_FWD].dat = (u16 *)&dat->mc_para.fwd;
+  20   1        usRegHoldingBuf[ADDR_MOTOR_GET_REV].dat = (u16 *)&dat->mc_para.rev;
+  21   1        usRegHoldingBuf[ADDR_MOTOR_GET_RESET].dat = (u16 *)&dat->mc_para.reset;
+  22   1        usRegHoldingBuf[ADDR_MOTOR_GET_FAULT].dat = (u16 *)&dat->mc_para.fault;
+  23   1        usRegHoldingBuf[ADDR_MOTOR_SET_RUN].dat = (u16 *)&dat->mc_para.set_run;
+  24   1        usRegHoldingBuf[ADDR_MOTOR_SET_VOL].dat = (u16 *)&dat->mc_para.set_vol;
+  25   1      
+  26   1        usRegHoldingBuf[ADDR_GET_MEMSX].dat = (u16 *)&dat->str_mems.x;
+  27   1        usRegHoldingBuf[ADDR_GET_MEMSY].dat = (u16 *)&dat->str_mems.y;
+  28   1        usRegHoldingBuf[ADDR_GET_MEMSZ].dat = (u16 *)&dat->str_mems.z;
+  29   1        
+  30   1        usRegHoldingBuf[ADDR_RUN_STATE].dat = (u16 *)&dat->run_state;
+  31   1        usRegHoldingBuf[ADDR_CUR].dat = (u16 *)&dat->current;
+  32   1        
+  33   1        usRegHoldingBuf[ADDR_SET_LED].dat = (u16 *)&dat->set_led;
+  34   1        
+  35   1        usRegHoldingBuf[ADDR_SET_AC1].dat = (u16 *)&dat->set_ac1;
+  36   1        usRegHoldingBuf[ADDR_SET_AC2].dat = (u16 *)&dat->set_ac2;
+  37   1        usRegHoldingBuf[ADDR_SET_AC3].dat = (u16 *)&dat->set_ac3;
+  38   1      
+  39   1        usRegHoldingBuf[ADDR_SET_CASE].dat = (u16 *)&dat->set_case;
+  40   1        usRegHoldingBuf[ADDR_SET_LOCK].dat = (u16 *)&dat->set_lock;
+  41   1        usRegHoldingBuf[ADDR_CASE_STATE].dat = (u16 *)&dat->case_state;  //盖子状态
+  42   1        usRegHoldingBuf[ADDR_LOCK_STATE].dat = (u16 *)&dat->lock_state;  //锁状态
+  43   1        
+  44   1        usRegHoldingBuf[ADDR_BOWL1_NUM].dat = (u16 *)&dat->bowl_num;
+  45   1        usRegHoldingBuf[ADDR_BOWL2_NUM].dat = (u16 *)&dat->bowl_test_flag;
+  46   1        usRegHoldingBuf[ADDR_MAGNET_NUM].dat = (u16 *)&dat->magnet_num;
+  47   1      
+  48   1        usRegHoldingBuf[ADDR_TANK1_TEMP].dat = (u16 *)&dat->tank1_temp;
+  49   1        usRegHoldingBuf[ADDR_TANK1_PRE].dat = (u16 *)&dat->tank1_pre;
+  50   1        usRegHoldingBuf[ADDR_TANK2_TEMP].dat = (u16 *)&dat->tank2_temp;
+  51   1        usRegHoldingBuf[ADDR_TANK2_PRE].dat = (u16 *)&dat->tank2_pre;
+  52   1        
+  53   1        usRegHoldingBuf[ADDR_DOOR].dat = (u16 *)&dat->case_open;//    PAin(0) 
+C51 COMPILER V9.60.7.0   MAIN                                                              10/15/2026 13:49:18 PAGE 2   
+
+  54   1        usRegHoldingBuf[ADDR_LOCK].dat = (u16 *)&dat->case_close;//   PAin(1)   
+  55   1        usRegHoldingBuf[ADDR_OPEN].dat = (u16 *)&dat->tank_lock;   //按压后上锁
+  56   1      }
+  57          
+  58          void main(void)
+  59          { 
+  60   1        sys_init();//系统初始化
+  61   1        Init_Rtu_RegHoldingBuf(&str_sys);
+  62   1        rtu_data_init();
+  63   1        btn_init();        
+  64   1        T5L_HMIslvInit(); //初始化通讯参数
+  65   1        EA=1;
+  66   1        Task_Manage_List_Init( );  // 事件任务函数初始化
+  67   1        win_init();
+  68   1        while(1)
+  69   1        {
+  70   2          Execute_Task_List_RUN();
+  71   2          T5L_HMIslvSub(); //功能：在线更新触摸屏程序
+  72   2          
+  73   2        }
+  74   1      }
+  75          
+  76          
+  77          
+  78          
+  79          
+  80          
+  81          
+  82          
+  83          
+  84          
+  85          
+  86          
+  87          
+  88          
+  89          
+  90          
+  91          
+  92          
+  93          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    589    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     60       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

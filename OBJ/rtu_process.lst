@@ -1,0 +1,144 @@
+C51 COMPILER V9.60.7.0   RTU_PROCESS                                                       10/15/2026 13:49:22 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTU_PROCESS
+OBJECT MODULE PLACED IN ..\OBJ\rtu_process.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\rtu_process.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(
+                    -..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\rtu_process.
+                    -lst) TABS(2) OBJECT(..\OBJ\rtu_process.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          #include "string.h"
+   3          #include "usart.h"
+   4          #include "rtu_api.h"
+   5          #include "motor_cmd.h"
+   6          #include "rtu_protocol.h"
+   7          #include "rtu_process.h"
+   8          #include "start_win.h"
+   9          
+  10          void RTU_Cmd_Pending(u8 cmd,u16 dat)
+  11          {
+  12   1        rtu_structure.cmd[rtu_structure.pending] = cmd;
+  13   1        rtu_structure.cmd_data[rtu_structure.pending] = dat;
+  14   1        rtu_structure.pending = ++rtu_structure.pending%MAX_BUFFER_NUMBER;
+  15   1      }
+  16          void RTU_Send_Cmd(u8 index)
+  17          {
+  18   1        switch(rtu_structure.cmd[index])
+  19   1        {
+  20   2          case RTU_START://str_sys.mc_para.set_run = 0x08;    
+  21   2          case RTU_STOP://str_sys.mc_para.set_run = 0x04;     
+  22   2          case RTU_RUN_FWD://str_sys.mc_para.set_run = 0x01;
+  23   2          case RTU_RUN_REV:// str_sys.mc_para.set_run = 0x02;
+  24   2            rtu_protocol_format_wr(ADDR_MOTOR_SET_RUN,1,(u16 *)&rtu_structure.cmd_data[index]);
+  25   2            break;
+  26   2          case RTU_SET_VLOTAGE:
+  27   2            rtu_protocol_format_wr(ADDR_MOTOR_SET_VOL,1,(u16 *)&rtu_structure.cmd_data[index]);
+  28   2            break;
+  29   2          case RTU_CASE_ACTION:
+  30   2            rtu_protocol_format_wr(ADDR_SET_CASE,1,(u16 *)&rtu_structure.cmd_data[index]);
+  31   2            break;
+  32   2          case RTU_LOCK_ACTION:
+  33   2            rtu_protocol_format_wr(ADDR_SET_LOCK,1,(u16 *)&rtu_structure.cmd_data[index]);
+  34   2            break;
+  35   2          case RTU_SET_LED:
+  36   2            rtu_protocol_format_wr(ADDR_SET_LED,1,(u16 *)&rtu_structure.cmd_data[index]);
+  37   2            break;
+  38   2          case RTU_ACFAN_RUN:
+  39   2          case RTU_ACFAN_STOP:
+  40   2            rtu_protocol_format_wr(ADDR_SET_AC1,1,(u16 *)&rtu_structure.cmd_data[index]);
+  41   2            break;    
+  42   2          case RTU_IDlE:
+  43   2            rtu_protocol_format_rd(ADDR_MOTOR_GET_FWD,ADDR_HREG_TOTAL);
+  44   2            break;
+  45   2          
+  46   2          default:
+  47   2            break;
+  48   2        }
+  49   1      }
+  50          void RTU_Send_Task_Handler(void)
+  51          {
+  52   1        if(rtu_structure.event == EV_REPEAT)
+  53   1        {
+C51 COMPILER V9.60.7.0   RTU_PROCESS                                                       10/15/2026 13:49:22 PAGE 2   
+
+  54   2          if(rtu_structure.repeat == 0)
+  55   2          {
+  56   3            sys_speaker_work(1);
+  57   3            rtu_structure.addr = 0;
+  58   3            rtu_structure.funcode = 0;
+  59   3            rtu_structure.event = EV_READY;
+  60   3          }
+  61   2          else
+  62   2          {
+  63   3            rtu_structure.processed = --rtu_structure.processed%MAX_BUFFER_NUMBER;
+  64   3            RTU_Send_Cmd(rtu_structure.processed);
+  65   3            rtu_structure.event = EV_EXECUTE;
+  66   3          //  rtu_structure.cmd[rtu_structure.processed] = RTU_IDlE;
+  67   3            rtu_structure.processed = ++rtu_structure.processed % MAX_BUFFER_NUMBER;
+  68   3          }
+  69   2          if(rtu_structure.repeat>0) rtu_structure.repeat--;
+  70   2        }
+  71   1        if(rtu_structure.event!=EV_READY)
+  72   1        return;
+  73   1        if(rtu_structure.processed == rtu_structure.pending)
+  74   1        {
+  75   2          RTU_Cmd_Pending(RTU_IDlE,0);
+  76   2        }
+  77   1      
+  78   1        //start process send cmd
+  79   1        rtu_structure.event = EV_FRAME_SENT;
+  80   1        RTU_Send_Cmd(rtu_structure.processed);
+  81   1        rtu_structure.repeat = 3;
+  82   1        rtu_structure.event = EV_EXECUTE;
+  83   1        //rtu_structure.cmd[rtu_structure.processed] = RTU_IDlE;
+  84   1        rtu_structure.processed = ++rtu_structure.processed % MAX_BUFFER_NUMBER;
+  85   1      }
+  86          //dispose receive_data
+  87          void API_Callback_Handler(API_StructDef* request, API_Data_StructDef* response_data)
+  88          {
+  89   1        unsigned short idata addr=0;    
+  90   1        unsigned short idata index=0;  
+  91   1        unsigned short* dat = request->Data;   
+  92   1        response_data = 0;   
+  93   1        addr = RTU_MEM(request->addr);
+  94   1        switch(request->funcode)
+  95   1        {
+  96   2          case RTU_FUNC_CODE_RD:
+  97   2            for(index = 0;index<request->len;index++)
+  98   2            {
+  99   3              usRegHoldingBuf[addr+index].dat[0] = request->Data[index];
+ 100   3            }         
+ 101   2          break;
+ 102   2          case RTU_FUNC_CODE_WR:
+ 103   2            break;
+ 104   2          case RTU_FUNC_CODE_CWR:     
+ 105   2          break;
+ 106   2          case RTU_FUNC_CODE_ERROR:
+ 107   2            
+ 108   2            break;
+ 109   2          default: break;
+ 110   2        }
+ 111   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    678    ----
+C51 COMPILER V9.60.7.0   RTU_PROCESS                                                       10/15/2026 13:49:22 PAGE 3   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      13
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----       4
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,12 @@
+Build target 'TEMPLATE'
+compiling start_win.c...
+..\GUI_APP\start_win.c(197): warning C280: 'var_addr': unreferenced local variable
+..\GUI_APP\start_win.c(340): warning C280: 'btn_val': unreferenced local variable
+..\GUI_APP\start_win.c(587): warning C280: 'btn_val': unreferenced local variable
+..\GUI_APP\start_win.c(934): warning C280: 'sys': unreferenced local variable
+..\GUI_APP\start_win.c(1009): warning C209: '_win_load_setpara': too few actual parameters
+linking...
+Program Size: data=45.1 xdata=4667 const=833 code=20059
+creating hex file from "..\OBJ\T5_HMI_V1.0"...
+"..\OBJ\T5_HMI_V1.0" - 0 Error(s), 5 Warning(s).
+Build Time Elapsed:  00:00:05

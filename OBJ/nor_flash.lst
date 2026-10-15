@@ -1,0 +1,118 @@
+C51 COMPILER V9.60.7.0   NOR_FLASH                                                         10/12/2026 15:12:42 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE NOR_FLASH
+OBJECT MODULE PLACED IN ..\OBJ\nor_flash.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\NOR_FLASH\nor_flash.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INC
+                    -DIR(..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\nor_flas
+                    -h.lst) TABS(2) OBJECT(..\OBJ\nor_flash.obj)
+
+line level    source
+
+   1          #include "nor_flash.h"
+   2          
+   3          
+   4          
+   5          xdata u8 norflash_cmd[8];
+   6          
+   7          
+   8          //向T5L内部自带的nor flash写入数据
+   9          //addr:nor flash的地址,必须为偶数,范围为:0x000000-0x027FFE,然后一个地址对应2个字节,即总容量为320KB
+  10          //buff:需要写入的缓冲区,长度至少大于len*2
+  11          //len:写入的字数,必须为偶数,而且写入的最大长度也有限制,这个跟CACHE_ADDR的值有关系
+  12          void norflash_write(u32 addr,u8* buff,u16 len)
+  13          {
+  14   1        //1.先把buff中的数据写入到DGUSII可用变量区(CACHE_ADDR)缓存一下
+  15   1        sys_write_vp(CACHE_ADDR,buff,len);
+  16   1        
+  17   1        //2.然后再把CACHE_ADDR处的内容写入到nor flash中
+  18   1        norflash_cmd[0] = NOR_FLASH_WRITE;//写操作
+  19   1        norflash_cmd[1] = (addr>>16)&0xff;//nor flash地址
+  20   1        norflash_cmd[2] = (addr>>8)&0xff;
+  21   1        norflash_cmd[3] = addr&0xff;
+  22   1        norflash_cmd[4] = (CACHE_ADDR>>8)&0xff;//dgusii数据地址
+  23   1        norflash_cmd[5] = CACHE_ADDR&0xff;
+  24   1        norflash_cmd[6] = (len>>8)&0xff;//写入的数据长度
+  25   1        norflash_cmd[7] = len&0xff;
+  26   1        sys_write_vp(NOR_FLASH_ADDR,norflash_cmd,4);
+  27   1        
+  28   1        //3.等待操作完成
+  29   1        while(1)
+  30   1        {
+  31   2          sys_read_vp(NOR_FLASH_ADDR,norflash_cmd,2);//只需读取0x0008变量的前2个字,然后判断D7是否为0
+  32   2          if(norflash_cmd[0]==0)
+  33   2            break;
+  34   2          sys_delay_about_ms(1);//这个延时必须加,可以防止莫名其妙的错误
+  35   2        }
+  36   1      }
+  37          
+  38          
+  39          
+  40          //向T5L内部自带的nor flash读取数据
+  41          //addr:nor flash的地址,必须为偶数,范围为:0x000000-0x027FFE,然后一个地址对应2个字节,即总容量为320KB
+  42          //buff:需要读入的缓冲区,长度至少大于len*2
+  43          //len:读取的字数,必须为偶数,而且写入的最大长度也有限制,这个跟CACHE_ADDR的值有关系
+  44          void norflash_read(u32 addr,u8* buff,u16 len)
+  45          {
+  46   1        //1.把nor flash中的内容读取到CACHE_ADDR
+  47   1        norflash_cmd[0] = NOR_FLASH_READ;//读操作
+  48   1        norflash_cmd[1] = (addr>>16)&0xff;//nor flash地址
+  49   1        norflash_cmd[2] = (addr>>8)&0xff;
+  50   1        norflash_cmd[3] = addr&0xff;
+  51   1        norflash_cmd[4] = (CACHE_ADDR>>8)&0xff;//dgusii数据地址
+  52   1        norflash_cmd[5] = CACHE_ADDR&0xff;
+  53   1        norflash_cmd[6] = (len>>8)&0xff;//写入的数据长度
+C51 COMPILER V9.60.7.0   NOR_FLASH                                                         10/12/2026 15:12:42 PAGE 2   
+
+  54   1        norflash_cmd[7] = len&0xff;
+  55   1        sys_write_vp(NOR_FLASH_ADDR,norflash_cmd,4);
+  56   1        
+  57   1        //2.等待操作完成
+  58   1        while(1)
+  59   1        {
+  60   2          sys_read_vp(NOR_FLASH_ADDR,norflash_cmd,2);//只需读取0x0008变量的前4个字节,然后判断D7是否为0
+  61   2          if(norflash_cmd[0]==0)
+  62   2            break;
+  63   2          sys_delay_about_ms(1);//这个延时必须加,可以防止莫名其妙的错误
+  64   2        }
+  65   1        
+  66   1        //3.再把CACHE_ADDR处的数据读取到buff中
+  67   1        sys_read_vp(CACHE_ADDR,buff,len);
+  68   1      }
+  69          
+  70          
+  71          
+  72          
+  73          
+  74          
+  75          
+  76          
+  77          
+  78          
+  79          
+  80          
+  81          
+  82          
+  83          
+  84          
+  85          
+  86          
+  87          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    368    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      8      18
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

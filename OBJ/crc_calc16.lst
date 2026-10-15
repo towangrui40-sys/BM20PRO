@@ -1,0 +1,308 @@
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CRC_CALC16
+OBJECT MODULE PLACED IN ..\OBJ\crc_calc16.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\crc_calc16.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(.
+                    -.\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\crc_calc16.ls
+                    -t) TABS(2) OBJECT(..\OBJ\crc_calc16.obj)
+
+line level    source
+
+   1          #include "crc_calc16.h"
+   2          /**
+   3          **************************************************************************************************
+   4          * @Brief    Single byte data inversion
+   5          * @Param
+   6          *            @DesBuf: destination buffer
+   7          *            @SrcBuf: source buffer
+   8          * @RetVal    None
+   9          * @Note      (MSB)0101_0101 ---> 1010_1010(LSB)
+  10          **************************************************************************************************
+  11          */
+  12          void InvertUint8(unsigned char *DesBuf, unsigned char *SrcBuf)
+  13          {
+  14   1          int i;
+  15   1          unsigned char temp = 0;
+  16   1      
+  17   1          for(i = 0; i < 8; i++)
+  18   1          {
+  19   2              if(SrcBuf[0] & (1 << i))
+  20   2              {
+  21   3                  temp |= 1<<(7-i);
+  22   3              }
+  23   2          }
+  24   1          DesBuf[0] = temp;
+  25   1      }
+  26          
+  27          /**
+  28          **************************************************************************************************
+  29          * @Brief    double byte data inversion
+  30          * @Param
+  31          *            @DesBuf: destination buffer
+  32          *            @SrcBuf: source buffer
+  33          * @RetVal    None
+  34          * @Note      (MSB)0101_0101_1010_1010 ---> 0101_0101_1010_1010(LSB)
+  35          **************************************************************************************************
+  36          */
+  37          void InvertUint16(unsigned short *DesBuf, unsigned short *SrcBuf)
+  38          {
+  39   1          int i;
+  40   1          unsigned short temp = 0;
+  41   1      
+  42   1          for(i = 0; i < 16; i++)
+  43   1          {
+  44   2              if(SrcBuf[0] & (1 << i))
+  45   2              {
+  46   3                  temp |= 1<<(15 - i);
+  47   3              }
+  48   2          }
+  49   1          DesBuf[0] = temp;
+  50   1      }
+  51          
+  52          unsigned short CRC16_CCITT(unsigned char *puchMsg, unsigned int usDataLen)
+  53          {
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 2   
+
+  54   1          unsigned short wCRCin = 0x0000;
+  55   1          unsigned short wCPoly = 0x1021;
+  56   1          unsigned char wChar = 0;
+  57   1          int i;
+  58   1          while (usDataLen--)
+  59   1          {
+  60   2              wChar = *(puchMsg++);
+  61   2              InvertUint8(&wChar, &wChar);
+  62   2              wCRCin ^= (wChar << 8);
+  63   2      
+  64   2              for( i = 0; i < 8; i++)
+  65   2              {
+  66   3                  if(wCRCin & 0x8000)
+  67   3                  {
+  68   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+  69   4                  }
+  70   3                  else
+  71   3                  {
+  72   4                      wCRCin = wCRCin << 1;
+  73   4                  }
+  74   3              }
+  75   2          }
+  76   1          InvertUint16(&wCRCin, &wCRCin);
+  77   1          return (wCRCin) ;
+  78   1      }
+  79          
+  80          unsigned short CRC16_CCITT_FALSE(unsigned char *puchMsg, unsigned int usDataLen)
+  81          {
+  82   1          unsigned short wCRCin = 0xFFFF;
+  83   1          unsigned short wCPoly = 0x1021;
+  84   1          unsigned char wChar = 0;
+  85   1          int i;
+  86   1          while (usDataLen--)
+  87   1          {
+  88   2              wChar = *(puchMsg++);
+  89   2              wCRCin ^= (wChar << 8);
+  90   2      
+  91   2              for( i = 0; i < 8; i++)
+  92   2              {
+  93   3                  if(wCRCin & 0x8000)
+  94   3                  {
+  95   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+  96   4                  }
+  97   3                  else
+  98   3                  {
+  99   4                      wCRCin = wCRCin << 1;
+ 100   4                  }
+ 101   3              }
+ 102   2          }
+ 103   1          return (wCRCin) ;
+ 104   1      }
+ 105          
+ 106          unsigned short CRC16_XMODEM(unsigned char *puchMsg, unsigned int usDataLen)
+ 107          {
+ 108   1          unsigned short wCRCin = 0x0000;
+ 109   1          unsigned short wCPoly = 0x1021;
+ 110   1          unsigned char wChar = 0;
+ 111   1          int i;
+ 112   1          while (usDataLen--)
+ 113   1          {
+ 114   2              wChar = *(puchMsg++);
+ 115   2              wCRCin ^= (wChar << 8);
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 3   
+
+ 116   2      
+ 117   2              for( i = 0; i < 8; i++)
+ 118   2              {
+ 119   3                  if(wCRCin & 0x8000)
+ 120   3                  {
+ 121   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 122   4                  }
+ 123   3                  else
+ 124   3                  {
+ 125   4                      wCRCin = wCRCin << 1;
+ 126   4                  }
+ 127   3              }
+ 128   2          }
+ 129   1          return (wCRCin) ;
+ 130   1      }
+ 131          
+ 132          unsigned short CRC16_X25(unsigned char *puchMsg, unsigned int usDataLen)
+ 133          {
+ 134   1          unsigned short wCRCin = 0xFFFF;
+ 135   1          unsigned short wCPoly = 0x1021;
+ 136   1          unsigned char wChar = 0;
+ 137   1          int i;
+ 138   1          while (usDataLen--)
+ 139   1          {
+ 140   2              wChar = *(puchMsg++);
+ 141   2              InvertUint8(&wChar, &wChar);
+ 142   2              wCRCin ^= (wChar << 8);
+ 143   2      
+ 144   2              for( i = 0;i < 8;i++)
+ 145   2              {
+ 146   3                  if(wCRCin & 0x8000)
+ 147   3                  {
+ 148   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 149   4                  }
+ 150   3                  else
+ 151   3                  {
+ 152   4                      wCRCin = wCRCin << 1;
+ 153   4                  }
+ 154   3              }
+ 155   2          }
+ 156   1          InvertUint16(&wCRCin, &wCRCin);
+ 157   1          return (wCRCin^0xFFFF) ;
+ 158   1      }
+ 159          
+ 160          unsigned short CRC16_MODBUS(unsigned char *puchMsg, unsigned int usDataLen)
+ 161          {
+ 162   1          unsigned short wCRCin = 0xFFFF;
+ 163   1          unsigned short wCPoly = 0x8005;
+ 164   1          unsigned char wChar = 0;
+ 165   1          int i;
+ 166   1          while (usDataLen--)
+ 167   1          {
+ 168   2              wChar = *(puchMsg++);
+ 169   2              InvertUint8(&wChar, &wChar);
+ 170   2              wCRCin ^= (wChar << 8);
+ 171   2      
+ 172   2              for( i = 0; i < 8; i++)
+ 173   2              {
+ 174   3                  if(wCRCin & 0x8000)
+ 175   3                  {
+ 176   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 177   4                  }
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 4   
+
+ 178   3                  else
+ 179   3                  {
+ 180   4                      wCRCin = wCRCin << 1;
+ 181   4                  }
+ 182   3              }
+ 183   2          }
+ 184   1          InvertUint16(&wCRCin, &wCRCin);
+ 185   1          return (wCRCin) ;
+ 186   1      }
+ 187          
+ 188          unsigned short CRC16_IBM(unsigned char *puchMsg, unsigned int usDataLen)
+ 189          {
+ 190   1          unsigned short wCRCin = 0x0000;
+ 191   1          unsigned short wCPoly = 0x8005;
+ 192   1          unsigned char wChar = 0;
+ 193   1          int i;
+ 194   1          while (usDataLen--)
+ 195   1          {
+ 196   2              wChar = *(puchMsg++);
+ 197   2              InvertUint8(&wChar, &wChar);
+ 198   2              wCRCin ^= (wChar << 8);
+ 199   2      
+ 200   2              for( i = 0; i < 8; i++)
+ 201   2              {
+ 202   3                  if(wCRCin & 0x8000)
+ 203   3                  {
+ 204   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 205   4                  }
+ 206   3                  else
+ 207   3                  {
+ 208   4                      wCRCin = wCRCin << 1;
+ 209   4                  }
+ 210   3              }
+ 211   2          }
+ 212   1          InvertUint16(&wCRCin,&wCRCin);
+ 213   1          return (wCRCin) ;
+ 214   1      }
+ 215          
+ 216          unsigned short CRC16_MAXIM(unsigned char *puchMsg, unsigned int usDataLen)
+ 217          {
+ 218   1          unsigned short wCRCin = 0x0000;
+ 219   1          unsigned short wCPoly = 0x8005;
+ 220   1          unsigned char wChar = 0;
+ 221   1          int i;
+ 222   1          while (usDataLen--)
+ 223   1          {
+ 224   2              wChar = *(puchMsg++);
+ 225   2              InvertUint8(&wChar, &wChar);
+ 226   2              wCRCin ^= (wChar << 8);
+ 227   2      
+ 228   2              for( i = 0; i < 8; i++)
+ 229   2              {
+ 230   3                  if(wCRCin & 0x8000)
+ 231   3                  {
+ 232   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 233   4                  }
+ 234   3                  else
+ 235   3                  {
+ 236   4                      wCRCin = wCRCin << 1;
+ 237   4                  }
+ 238   3              }
+ 239   2          }
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 5   
+
+ 240   1          InvertUint16(&wCRCin, &wCRCin);
+ 241   1          return (wCRCin^0xFFFF) ;
+ 242   1      }
+ 243          
+ 244          unsigned short CRC16_USB(unsigned char *puchMsg, unsigned int usDataLen)
+ 245          {
+ 246   1          unsigned short wCRCin = 0xFFFF;
+ 247   1          unsigned short wCPoly = 0x8005;
+ 248   1          unsigned char wChar = 0;
+ 249   1          int i;
+ 250   1      
+ 251   1          while (usDataLen--)
+ 252   1          {
+ 253   2              wChar = *(puchMsg++);
+ 254   2              InvertUint8(&wChar, &wChar);
+ 255   2              wCRCin ^= (wChar << 8);
+ 256   2      
+ 257   2              for( i = 0; i < 8; i++)
+ 258   2              {
+ 259   3                  if(wCRCin & 0x8000)
+ 260   3                  {
+ 261   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
+ 262   4                  }
+ 263   3                  else
+ 264   3                  {
+ 265   4                      wCRCin = wCRCin << 1;
+ 266   4                  }
+ 267   3              }
+ 268   2          }
+ 269   1          InvertUint16(&wCRCin, &wCRCin);
+ 270   1          return (wCRCin^0xFFFF) ;
+ 271   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2088    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----     115
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

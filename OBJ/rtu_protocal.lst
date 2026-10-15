@@ -1,0 +1,70 @@
+C51 COMPILER V9.60.0.0   RTU_PROTOCAL                                                      03/21/2022 18:13:41 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE RTU_PROTOCAL
+OBJECT MODULE PLACED IN ..\OBJ\rtu_protocal.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\rtu_protocal.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR
+                    -(..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART) DEBUG PRINT(..\OBJ\rtu_protocal.lst) TABS(2
+                    -) OBJECT(..\OBJ\rtu_protocal.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          #include "cyc_calc16.h"
+*** WARNING C318 IN LINE 2 OF ..\FUNC_HANDLER\rtu_protocal.c: can't open file 'cyc_calc16.h'
+   3          #include "rtu_protocol.h"
+*** WARNING C318 IN LINE 3 OF ..\FUNC_HANDLER\rtu_protocal.c: can't open file 'rtu_protocol.h'
+   4          
+   5          typedef struct
+   6          {
+   7            u8 station;
+   8            #define COM_FUNC_CODE_RD 0x03
+   9            #define COM_FUNC_CODE_CRD 0x05
+  10            #define COM_FUNC_CODE_WR 0X06
+  11            #define COM_FUNC_CODE_CWR 0X10
+  12            u8 func_code;
+  13            u16 addr;
+  14            u16 num;
+  15            u8 package[2];
+  16            u16 crc16;
+  17          }ST_RTU_READ_DEF;
+  18          
+  19          ST_RTU_READ_DEF st_rtu_read;
+  20          
+  21          
+  22          u8 rtu_protocol_format_rd(u8 station,u16 addr,u16 length,u8* backdata)
+  23          {
+  24   1        //rtu protocal make package  
+  25   1        u8 num =0;
+  26   1        u8 error_code = 0;
+  27   1        u16 crc_value=0;
+  28   1        u8 package[12]={0};
+  29   1        
+  30   1        package[num++] = station;
+  31   1        package[num++] = COM_FUNC_CODE_RD;
+  32   1        package[num++] = (addr>>8)&0xff;
+  33   1        package[num++] = addr&0xff;
+  34   1        package[num++] = (length>>8)&0xff;
+  35   1        package[num++] = length&0xff;
+  36   1        
+  37   1        crc_value = CRC16_CCITT(package,num);
+*** WARNING C206 IN LINE 37 OF ..\FUNC_HANDLER\rtu_protocal.c: 'CRC16_CCITT': missing function-prototype
+*** ERROR C267 IN LINE 37 OF ..\FUNC_HANDLER\rtu_protocal.c: 'CRC16_CCITT': requires ANSI-style prototype
+  38   1        
+  39   1        package[num++] = (crc_value>>8)&0xff;
+  40   1        package[num++] = crc_value&0xff;
+  41   1        //send
+  42   1        TxArrayUart1(package,num);      
+  43   1        
+  44   1        //rev
+  45   1        ReceiveDate0();
+  46   1        
+  47   1        return error_code;
+  48   1      }
+  49          void rtu_protocol_format_crd(u8 station,u16 addr,u16 num)
+C51 COMPILER V9.60.0.0   RTU_PROTOCAL                                                      03/21/2022 18:13:41 PAGE 2   
+
+  50          void rtu_protocol_format_wr(u8 station,u16 addr,u16 num)
+  51          void rtu_protocol_format_cwr(u8 station,u16 addr,u16 num)
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  1 ERROR(S)

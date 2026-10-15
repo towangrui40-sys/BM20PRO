@@ -1,0 +1,137 @@
+C51 COMPILER V9.60.7.0   USART                                                             10/12/2026 15:12:43 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE USART
+OBJECT MODULE PLACED IN ..\OBJ\usart.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\HANDWARE\USART\usart.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\U
+                    -SER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\usart.lst) TABS(
+                    -2) OBJECT(..\OBJ\usart.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          #include "usart.h"
+   3          #include "string.h"
+   4          
+   5          STR_USART_TypeDef xdata str_usart_data;
+   6          
+   7          void sys_uart0_init()//115200
+   8          {
+   9   1      /****************************************************************************/
+  10   1        MUX_SEL |= 0x40;    //UART2引出,UART3不引出，WDT关闭
+  11   1        P0MDOUT|=0x10;    //P0.4 TXD output pp
+  12   1        SCON0 = 0x50;   //mode 1:8bit uart,enable rx
+  13   1        ADCON = 0X80;   //BAUD USE SREL0H:L
+  14   1        PCON &= 0X7F;     //disable multiple frequency
+  15   1        SREL0H = 0X03;  //L:H = 1024-CPU_FRQ/64/115200  
+  16   1        SREL0L = 0XE4;
+  17   1        
+  18   1        IEN0 |= 0X10;//enable uart2 inter rx tx
+  19   1        
+  20   1        memset(&str_usart_data,0,sizeof(str_usart_data));
+  21   1      }
+  22          
+  23          /****************************************************************************/
+  24          void  OneSendData0(u8 Dat)
+  25          {           
+  26   1        while (str_usart_data.tx_busy);               
+  27   1        str_usart_data.tx_busy = 1;
+  28   1        SBUF0 = Dat; 
+  29   1        //while(TI0 == 0);
+  30   1        //TI0=0;
+  31   1      }
+  32          /*******************************************
+  33          向串口发送数组，查询方式
+  34          参数1:数组指针;
+  35          参数2:数组长度;
+  36          *******************************************/
+  37          void TxArrayUart(unsigned char *ptr,unsigned int number) 
+  38          {
+  39   1        u8 idata i;
+  40   1        for(i = 0; i < number; i++)
+  41   1        {
+  42   2         OneSendData0(ptr[i]);
+  43   2        }
+  44   1      }
+  45          u8  Uart2_Receive_Data(u8 *ptr,u16 *cnt)
+  46          {     
+  47   1        u8 idata res;
+  48   1        u8 idata i;
+  49   1        if(str_usart_data.rx_busy == 1)
+  50   1        {   
+  51   2          if(str_usart_data.overtime == 0)
+  52   2          {
+  53   3            for(i = 0;i<str_usart_data.rx_cnt;i++)
+C51 COMPILER V9.60.7.0   USART                                                             10/12/2026 15:12:43 PAGE 2   
+
+  54   3            {
+  55   4              ptr[i] = str_usart_data.rx_buf[i];
+  56   4            }
+  57   3            *cnt = str_usart_data.rx_cnt;
+  58   3            str_usart_data.rx_busy = 0;
+  59   3            str_usart_data.rx_cnt = 0;
+  60   3            res = 1;//success   
+  61   3          }
+  62   2          else 
+  63   2          {
+  64   3            res = 2;//busy
+  65   3          }
+  66   2        }
+  67   1        else
+  68   1        {
+  69   2          res =0;//noting
+  70   2        }
+  71   1        return res;
+  72   1      } 
+  73            
+  74          
+  75          /****************************************************************************/
+  76           
+  77          //********************************************************* 
+  78          void uart2_Tisr() interrupt 4 using 2 //串口2中断
+  79          {
+  80   1        unsigned int data rData;
+  81   1        if(TI0 == 1)
+  82   1        {
+  83   2          TI0=0;
+  84   2      //    if(str_usart_data.tx_len < str_usart_data.tx_length)
+  85   2      //    {   
+  86   2      //      SBUF0=str_usart_data.tx_buf[str_usart_data.tx_len++];         
+  87   2      //    }
+  88   2      //    else  
+  89   2            str_usart_data.tx_busy=0; 
+  90   2            str_usart_data.rx_cnt = 0;  
+  91   2            str_usart_data.timeout=200;     
+  92   2        }
+  93   1        if(RI0 == 1)
+  94   1        {
+  95   2          rData = SBUF0;
+  96   2          RI0=0;  
+  97   2          str_usart_data.rx_buf[str_usart_data.rx_cnt] =rData;
+  98   2          
+  99   2          str_usart_data.rx_busy=1;
+ 100   2          str_usart_data.rx_cnt++;
+ 101   2          if(str_usart_data.rx_cnt==256) str_usart_data.rx_cnt = 0;
+ 102   2          str_usart_data.overtime=3; 
+ 103   2        }
+ 104   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    330    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    327      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----       3
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   USART                                                             10/12/2026 15:12:43 PAGE 3   
+
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

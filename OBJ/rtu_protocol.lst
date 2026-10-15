@@ -1,0 +1,187 @@
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/15/2026 13:49:29 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTU_PROTOCOL
+OBJECT MODULE PLACED IN ..\OBJ\rtu_protocol.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\rtu_protocol.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR
+                    -(..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\rtu_protoco
+                    -l.lst) TABS(2) OBJECT(..\OBJ\rtu_protocol.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          #include "usart.h"
+   3          #include "crc_calc16.h"
+   4          #include "rtu_api.h"
+   5          #include "rtu_protocol.h"
+   6          
+   7          #include "start_win.h"
+   8          
+   9          RTU_MemDef xdata usRegHoldingBuf[ADDR_HREG_TOTAL];
+  10          
+  11          RTU_TypeDef xdata rtu_structure;//main and module
+  12          
+  13          void rtu_protocol_format_rd(u16 addr,u16 length)//read hold reg
+  14          {
+  15   1        //rtu protocal build package  
+  16   1        u8 idata num =0;
+  17   1        u16 idata tx_crc_value=0;
+  18   1        u16 xdata addr_temp=0;
+  19   1        u8 xdata package[128]={0};
+  20   1      
+  21   1        addr_temp = RTU_MEM_BASE +addr; 
+  22   1        rtu_structure.addr = addr_temp;
+  23   1        rtu_structure.funcode = RTU_FUNC_CODE_RD;
+  24   1        package[num++] = rtu_structure.sta ;
+  25   1        package[num++] = RTU_FUNC_CODE_RD;
+  26   1        package[num++] = (addr_temp>>8)&0xff;
+  27   1        package[num++] = addr_temp&0xff;
+  28   1      
+  29   1        package[num++] = (length>>8)&0xff;
+  30   1        package[num++] = length&0xff;
+  31   1      
+  32   1        tx_crc_value = CRC16_MODBUS(package,num);
+  33   1        package[num++] = tx_crc_value&0xff;
+  34   1        package[num++] = (tx_crc_value>>8)&0xff;
+  35   1        //send
+  36   1        TxArrayUart(package,num); 
+  37   1      }
+  38          void rtu_protocol_format_wr(u16 addr,u16 length,u16* senddata)
+  39          {
+  40   1        //rtu protocal build package  
+  41   1        u8 num =0;
+  42   1        u8 i;
+  43   1        u8 error_code = 0;
+  44   1        u16 tx_crc_value=0;
+  45   1        u16 xdata addr_temp=0;
+  46   1        u8 xdata package[128]={0};
+  47   1        
+  48   1        addr_temp = RTU_MEM_BASE +addr;
+  49   1        package[num++] = rtu_structure.sta ;
+  50   1        if(length == 1)
+  51   1        {
+  52   2          package[num++] = RTU_FUNC_CODE_WR;
+  53   2          package[num++] = (addr_temp>>8)&0xff;
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/15/2026 13:49:29 PAGE 2   
+
+  54   2          package[num++] = addr_temp&0xff;
+  55   2        }
+  56   1        else
+  57   1        {
+  58   2          package[num++] = RTU_FUNC_CODE_CWR;
+  59   2          package[num++] = (addr_temp>>8)&0xff;
+  60   2          package[num++] = addr_temp&0xff;
+  61   2          package[num++] = (length>>8)&0xff;
+  62   2          package[num++] = length&0xff; 
+  63   2        } 
+  64   1        for(i=0;i<length;i++)
+  65   1        {
+  66   2          package[num++] = (senddata[i]>>8)&0xff; 
+  67   2          package[num++] = senddata[i]&0xff;  
+  68   2        }
+  69   1      
+  70   1        tx_crc_value = CRC16_MODBUS(package,num);
+  71   1        
+  72   1        package[num++] = tx_crc_value&0xff;
+  73   1        package[num++] = (tx_crc_value>>8)&0xff;
+  74   1        //send
+  75   1        TxArrayUart(package,num); 
+  76   1      } 
+  77          
+  78          
+  79          void rtu_data_init(void)
+  80          {
+  81   1        memset(&rtu_structure,0,sizeof(rtu_structure));
+  82   1        rtu_structure.sta = 0x03;// rtu slave station no
+  83   1        rtu_structure.event = EV_READY;
+  84   1      }
+  85          
+  86          static void m_dispose_finished(unsigned char* buffer, unsigned char size)
+  87          {
+  88   1          memcpy((void*)rtu_structure.rxdata_buffer[rtu_structure.pending_data], buffer, size);
+  89   1          rtu_structure.pending_data = ++rtu_structure.pending_data % MAX_BUFFER_NUMBER;
+  90   1      }
+  91          
+  92          static u8 rtu_rec_dispose(void)
+  93          {
+  94   1        unsigned short idata reclen,num;
+  95   1        u8 xdata receivebuf[256];
+  96   1        unsigned char  ret = 0;
+  97   1        unsigned char idata rx_data;
+  98   1          
+  99   1        if(Uart2_Receive_Data(receivebuf,&reclen) == 0x01)
+ 100   1        {
+ 101   2          for(num = 0;num<reclen;num++)
+ 102   2          {
+ 103   3            rx_data = receivebuf[num];
+ 104   3            
+ 105   3            ret = API_SerailLoop(rx_data, &m_dispose_finished);
+ 106   3          }
+ 107   2        }
+ 108   1        else
+ 109   1        {
+ 110   2          ret = 0;
+ 111   2        }
+ 112   1        return ret;
+ 113   1      }
+ 114          u8 rtu_response_handler(void)
+ 115          {
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/15/2026 13:49:29 PAGE 3   
+
+ 116   1        unsigned char idata* response = 0;  
+ 117   1        switch(rtu_structure.event)
+ 118   1        {
+ 119   2          case EV_EXECUTE:
+ 120   2            if(rtu_rec_dispose() ==1)
+ 121   2            {
+ 122   3              
+ 123   3              rtu_structure.event = EV_FRAME_RECEIVED;
+ 124   3            }
+ 125   2            else
+ 126   2            {
+ 127   3              if(str_usart_data.timeout == 0)
+ 128   3                rtu_structure.event = EV_TIME_OUT;      
+ 129   3            }
+ 130   2            
+ 131   2          break;
+ 132   2          case EV_FRAME_RECEIVED:
+ 133   2            if(rtu_structure.processed_data != rtu_structure.pending_data)
+ 134   2            {            
+ 135   3              //rtu_structure.event = C_EV_FRAME_RECEIVED;
+ 136   3              // Dispose Data and make response
+ 137   3              response = API_Response(rtu_structure.rxdata_buffer[rtu_structure.processed_data]);      
+ 138   3              rtu_structure.processed_data = ++rtu_structure.processed_data % MAX_BUFFER_NUMBER;
+ 139   3              
+ 140   3              rtu_structure.addr = 0;
+ 141   3              rtu_structure.funcode = 0;
+ 142   3              rtu_structure.event = EV_READY;
+ 143   3            }
+ 144   2            
+ 145   2          break;
+ 146   2          case EV_REPEAT:       
+ 147   2          break;
+ 148   2          case EV_TIME_OUT:
+ 149   2            rtu_structure.event =EV_REPEAT;
+ 150   2          break;
+ 151   2          default: break;
+ 152   2        } 
+ 153   1        return 0;
+ 154   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1143    ----
+   CONSTANT SIZE    =    256    ----
+   XDATA SIZE       =   2169     538
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----       8
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

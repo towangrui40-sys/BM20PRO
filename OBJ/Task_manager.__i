@@ -1,0 +1,1 @@
+"Task_manager.c" LARGE OMF2 OPTIMIZE (3,SIZE) BROWSE INCDIR(..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\Task_manager.lst) TABS (2) OBJECT(..\OBJ\Task_manager.obj)

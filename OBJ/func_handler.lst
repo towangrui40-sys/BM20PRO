@@ -1,0 +1,193 @@
+C51 COMPILER V9.60.7.0   FUNC_HANDLER                                                      10/15/2026 13:49:27 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE FUNC_HANDLER
+OBJECT MODULE PLACED IN ..\OBJ\func_handler.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\func_handler.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR
+                    -(..\USER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\func_handle
+                    -r.lst) TABS(2) OBJECT(..\OBJ\func_handler.obj)
+
+line level    source
+
+   1          #include "func_handler.h"
+   2          #include "start_win.h"
+   3          //////////////////////////////////////////////////////////////////////////////////
+   4          ////////////////////////////////////button paras config///////////////////////////
+   5          //////////////////////////////////////////////////////////////////////////////////
+   6          /*********************��ά����********************/
+   7          code const u16 btn_click_pararlist[BTN_EVENT_NUM][2]={   //BTN_EVENT_NUM   ��ť���� ����
+             -��ʵ�ʸ���
+   8          {BTN_MAIN_PAGE_ADDR,      BTN_TYPE_CLICK},//paras input 
+   9          {BTN_MANUAL_PAGE_ADDR,      BTN_TYPE_CLICK},
+  10          {BTN_PASS_KEYPAD_ADDR,      BTN_TYPE_CLICK},
+  11          {BTN_PROG_NUM_SEL_ADDR,     BTN_TYPE_CLICK},
+  12          {BTN_PARA_KEYPAD_ADDR,      BTN_TYPE_CLICK},
+  13          {BTN_FAC_SET_ADDR,        BTN_TYPE_CLICK},
+  14          {BTN_SEL_BOWL_ADDR,         BTN_TYPE_CLICK},
+  15          {BTN_TEST_MODE_SET_ADDR,    BTN_TYPE_HOLD_RES},
+  16          {BTN_PROG_MODE_SET_ADDR,    BTN_TYPE_HOLD_RES},
+  17          
+  18          };
+  19          //////////////////////////////////////////////////////////////////////////////////
+  20          //////////////////////////////////////////////////////////////////////////////////
+  21          
+  22          bit is_btn_scan = 0;//是否要进行按钮点击扫描
+  23          
+  24          xdata STR_BTN_TypeDef btn_str_data[BTN_EVENT_NUM];
+  25          
+  26          
+  27          
+  28          static void btn_InitStructure(STR_BTN_TypeDef *obj,u16 index)
+  29          {
+  30   1        obj->addr = btn_click_pararlist[index][0];//button address
+  31   1        obj->type = btn_click_pararlist[index][1];//button type
+  32   1        switch(obj->type)
+  33   1        {
+  34   2          case BTN_TYPE_CLICK:
+  35   2              obj->func_callback = btn_click_callback;
+  36   2            break;
+  37   2          case BTN_TYPE_HOLD_RES:
+  38   2              obj ->func_callback = btn_hold_res_callback;
+  39   2            break;
+  40   2          case BTN_TYPE_HOLD_TIME:
+  41   2              obj->func_callback = btn_hold_click_callback;
+  42   2              obj->func_hold_callback = btn_hold_callback;
+  43   2            break;
+  44   2          default:
+  45   2              obj->func_callback = 0;
+  46   2              obj->func_hold_callback = 0;
+  47   2            break;
+  48   2        }
+  49   1        obj->val =0;
+  50   1        obj->val_temp = 0;
+  51   1        obj->timer = 0;
+  52   1      }
+C51 COMPILER V9.60.7.0   FUNC_HANDLER                                                      10/15/2026 13:49:27 PAGE 2   
+
+  53          static void btn_click_event(STR_BTN_TypeDef *obj)
+  54          {
+  55   1        u16 val;
+  56   1        sys_read_vp(obj->addr,(u8*)&obj->val,1);
+  57   1        switch(obj->type)
+  58   1        {
+  59   2          case BTN_TYPE_CLICK:
+  60   2            //检查是否有按钮按下
+  61   2            if(obj->val !=0)
+  62   2            {
+  63   3              //按钮点击事件处理,传递给相应的界面 
+  64   3              obj->func_callback(obj->addr,obj->val);     
+  65   3              //清除按键值
+  66   3              obj->val = 0;
+  67   3              sys_write_vp(obj->addr,(u8*)&obj->val,1); 
+  68   3            }
+  69   2            break;
+  70   2          case BTN_TYPE_HOLD_RES:
+  71   2            if(obj->val !=obj->val_temp)
+  72   2            {
+  73   3              obj->func_callback(obj->addr,obj->val);     
+  74   3              obj->val_temp = obj->val;
+  75   3              val=1;
+  76   3              sys_write_vp(HOLD_ACTIVE_ADDR,(u8*)&val,1);
+  77   3              val=0;
+  78   3              sys_write_vp(HOLD_PASSIVE_ADDR,(u8*)&val,1);
+  79   3            }       
+  80   2            break;
+  81   2          case BTN_TYPE_HOLD_TIME://click event,selected func
+  82   2            if(obj->val !=0)
+  83   2            {   
+  84   3              if((obj->timer <10)&&(obj->val != obj->val_temp))
+  85   3              {
+  86   4                obj->func_callback(obj->addr,obj->val); 
+  87   4              }
+  88   3              if(obj->timer ==20)// 600ms hold event,popup shotkey select menu
+  89   3              {
+  90   4                obj->func_hold_callback(obj->addr,obj->val);
+  91   4                //清除按键值
+  92   4                obj->val = 0;
+  93   4                sys_write_vp(obj->addr,(u8*)&obj->val,1);   
+  94   4              }
+  95   3              obj->timer++;
+  96   3            }
+  97   2            else
+  98   2            {
+  99   3              obj->timer = 0;
+ 100   3            }
+ 101   2            obj->val_temp = obj->val;
+ 102   2            break;
+ 103   2          default:
+ 104   2            break;
+ 105   2        }
+ 106   1      }
+ 107          
+ 108          void btn_init(void)
+ 109          {
+ 110   1        u16 i;
+ 111   1        u16 val;
+ 112   1        for(i=0;i<BTN_EVENT_NUM;i++)
+ 113   1        {
+ 114   2          btn_InitStructure(&btn_str_data[i],i);
+C51 COMPILER V9.60.7.0   FUNC_HANDLER                                                      10/15/2026 13:49:27 PAGE 3   
+
+ 115   2        }
+ 116   1        //init hold button reg
+ 117   1        val=1;
+ 118   1        sys_write_vp(HOLD_ACTIVE_ADDR,(u8*)&val,1);
+ 119   1        val=0;
+ 120   1        sys_write_vp(HOLD_PASSIVE_ADDR,(u8*)&val,1);
+ 121   1      }
+ 122          
+ 123          //用于产生按钮点击扫描信号,放在1ms的定时器中调用即可
+ 124          void btn_click_tick()
+ 125          {
+ 126   1        static idata u8 tick = 0;
+ 127   1        tick++;
+ 128   1        if(tick==BTN_SCAN_PERIOD)
+ 129   1        {
+ 130   2          tick = 0;
+ 131   2          is_btn_scan = 1;//产生一个按钮点击扫描信号
+ 132   2        }
+ 133   1      }
+ 134          
+ 135          //按钮点击事件扫描并处理
+ 136          void btn_click_handler(void)
+ 137          {
+ 138   1        u16 i;
+ 139   1      
+ 140   1        if(is_btn_scan==0)//是否有扫描信号,没有的话就啥也不做,直接返回
+ 141   1          return;
+ 142   1        
+ 143   1        is_btn_scan = 0;//清除
+ 144   1      
+ 145   1        for(i=0;i<BTN_EVENT_NUM;i++)
+ 146   1        {
+ 147   2          btn_click_event(&btn_str_data[i]);
+ 148   2        }
+ 149   1      }
+ 150          
+ 151          
+ 152          
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1185    ----
+   CONSTANT SIZE    =     48    ----
+   XDATA SIZE       =    180      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =      1    ----
+   BIT SIZE         =      1    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

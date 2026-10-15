@@ -1,0 +1,281 @@
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE T5LDRIVER
+OBJECT MODULE PLACED IN ..\OBJ\T5LDriver.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\T5LDriver\T5LDriver.C LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\US
+                    -ER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\T5LDriver.lst) TA
+                    -BS(2) OBJECT(..\OBJ\T5LDriver.obj)
+
+line level    source
+
+   1          /*
+   2          T5L 基础数据读取写入功能
+   3          */
+   4          
+   5          #include "T5LDriver.h"
+   6          
+   7          // T5L OS CPU初始化
+   8          void T5L_InitCPU()
+   9          {
+  10   1        CKCON=0x00; //CPU 运行在 1T 模式
+  11   1        T2CON=0x70; //配置扩展中断系统，定时器2 运行在 Autoload 模式
+  12   1        DPC=0x00;  //C51 开发必须为 0
+  13   1        PAGESEL=0x01; // 64kb 代码空间
+  14   1        D_PAGESEL=0x02; //DATA RAM 08000-0FFFF  xdata 空间
+  15   1        MUX_SEL=0x60; //把UART2、UART3 引出来，WDT关闭
+  16   1        RAMMODE=0x00; //不占用DGUS变量存储器
+  17   1        PORTDRV=0x01;   //IO驱动强度 +/-8mA
+  18   1      
+  19   1        IEN0=0x00;      //关闭所有中断
+  20   1        IEN1=0x00;
+  21   1        IEN2=0x00;
+  22   1      
+  23   1        IP0=0x00;   //中断优先级用默认值
+  24   1        IP1=0x00;
+  25   1      
+  26   1        P0=0x00;        //IO配置，输出关闭，是不是输出取决于P0MDOUT
+  27   1        P1=0x00;
+  28   1        P2=0x00;
+  29   1        P3=0x00;
+  30   1      
+  31   1        P0MDOUT=0x50; //P0 0101 0000
+  32   1        P1MDOUT=0x00; //P1 0000 0000
+  33   1        P2MDOUT=0x00; //P2 0000 0000
+  34   1        P3MDOUT=0x00; //P3 0000 0000
+  35   1      
+  36   1        PCON=0;
+  37   1        ADCON=0x80;   //UART2 配置 8N1 9600
+  38   1        SCON0=0x50;
+  39   1        //波特率设置,公式为:
+  40   1        //SMOD=0  SREL0H:L=1024-主频/(64*波特率),SMOD=1  SREL0H:L=1024-主频/(32*波特率)
+  41   1        //当晶振为11.0592时  主频= 11.0592*56/3=206.4384 MHz
+  42   1        SREL0H=0x02; //0x03;  //波特率=FCLK/64*(1024-SREL)
+  43   1        SREL0L=0xb0; //0xE4;
+  44   1        ES0=1;
+  45   1      
+  46   1        SCON1=0x90;     //UART3 配置 8N1 115200
+  47   1        SREL1H=0x03;  //波特率=FCLK/32*(1024-SREL1)
+  48   1        SREL1L=0xC8;
+  49   1      
+  50   1        SCON2T=0x80;    //UART4 配置 8N1 115200
+  51   1        SCON2R=0x80;
+  52   1        BODE2_DIV_H=0x00; //波特率=FCLK/8*DIV  T5L  s4_s5_25804800/9600=2688=0X0A80 S4_S5_ 115200=00E0   s2_11520
+             -0=03E4 S2_9600=02B0
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 2   
+
+  53   1        BODE2_DIV_L=0xe0;    //波特率为： 115200
+  54   1        ES2T=1;
+  55   1        ES2R=1; 
+  56   1        
+  57   1        SCON3T=0x80;    //UART5 配置 8N1 115200
+  58   1        SCON3R=0x80;
+  59   1        BODE3_DIV_H=0x00; //波特率=FCLK/8*DIV
+  60   1        BODE3_DIV_L=0xE0;
+  61   1      
+  62   1        TMOD=0x11;      //T0 16bit定时器
+  63   1        TH0=0x00;
+  64   1        TL0=0x00;
+  65   1        TR0=0;
+  66   1        TCON=0x05;      //EX0 EX1是下跳沿中断
+  67   1      
+  68   1        TH1=0x00;     //T1 16bit定时器
+  69   1        TL1=0x00;
+  70   1        TR1=0;
+  71   1        //计算方法： CPU_CLK= (晶振频率*56)/3
+  72   1        //当晶振频率为 11.0592则 CPU_CLK/12=17.2032 MHz 或 CPU_CLK/24 = 8.6016 MHz
+  73   1        //定时时间设置为： 65536 - 5000*8.6016
+  74   1        T2CON=0xF1;     //T2 16bit Autoload模式   主频/24
+  75   1        TH2=0x00;
+  76   1        TL2=0x00;
+  77   1        TRL2H=0x58;     //5 mS定时器
+  78   1        TRL2L=0x00;
+  79   1        ET2=1;  //允许定时中断
+  80   1        TF2=0;
+  81   1        TR2=1; //启动定时中断
+  82   1      
+  83   1      }
+  84          
+  85          //读取DGUS变量数据 dgus_addr=DGUS变量地址  startNo=数据缓冲字节位号  len=读取数据字节长度
+  86          //返回0 成功 ， 返回非零 失败
+  87          unsigned char T5L_ReadDgusBytes(unsigned int dgus_addr,unsigned char* dataPtr,unsigned int len)
+  88          {
+  89   1        unsigned int i;
+  90   1      
+  91   1        if (len==0) return 1; //超出缓冲区
+  92   1        i=(unsigned char)(dgus_addr & 0x01);
+  93   1        dgus_addr >>=1;
+  94   1        
+  95   1        EA=0;
+  96   1        ADR_H=0x00;
+  97   1        ADR_M=(unsigned char)(dgus_addr>>8);
+  98   1        ADR_L=(unsigned char)(dgus_addr);
+  99   1        ADR_INC=0x01;
+ 100   1        RAMMODE=0xAF;
+ 101   1        while (APP_ACK==0);
+ 102   1        
+ 103   1        if(i==1) //处理奇数起始地址
+ 104   1        {
+ 105   2          if(len==1)
+ 106   2          {
+ 107   3            RAMMODE=0xa2;
+ 108   3          }
+ 109   2          else
+ 110   2          {
+ 111   3            RAMMODE=0xa3;
+ 112   3          }
+ 113   2          APP_EN=1;
+ 114   2          while (APP_EN==1);
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 3   
+
+ 115   2          if(len==1)
+ 116   2          {
+ 117   3            *dataPtr++=DATA1;
+ 118   3            len=0;
+ 119   3          }
+ 120   2          else
+ 121   2          {
+ 122   3            *dataPtr++=DATA1;
+ 123   3            *dataPtr++=DATA0;
+ 124   3            len-=2;
+ 125   3          }
+ 126   2        }
+ 127   1        while (len>0)
+ 128   1        {
+ 129   2          switch(len)
+ 130   2          {
+ 131   3            case 1:
+ 132   3              RAMMODE=0xA8;
+ 133   3              APP_EN=1;
+ 134   3              while (APP_EN==1);        
+ 135   3              *dataPtr++=DATA3;
+ 136   3              len=0;
+ 137   3              break;
+ 138   3            case 2:
+ 139   3              RAMMODE=0xAC;
+ 140   3              APP_EN=1;
+ 141   3              while (APP_EN==1);        
+ 142   3              *dataPtr++=DATA3;
+ 143   3              *dataPtr++=DATA2;
+ 144   3              len=0;
+ 145   3              break;
+ 146   3            case 3:
+ 147   3              RAMMODE=0xAE;
+ 148   3              APP_EN=1;
+ 149   3              while (APP_EN==1);        
+ 150   3              *dataPtr++=DATA3;
+ 151   3              *dataPtr++=DATA2;
+ 152   3              *dataPtr++=DATA1;
+ 153   3              len=0;
+ 154   3              break;
+ 155   3            default:
+ 156   3              RAMMODE=0xAF;
+ 157   3              APP_EN=1;
+ 158   3              while (APP_EN==1);        
+ 159   3              *dataPtr++=DATA3;
+ 160   3              *dataPtr++=DATA2;
+ 161   3              *dataPtr++=DATA1;
+ 162   3              *dataPtr++=DATA0;
+ 163   3              len-=4;
+ 164   3          }
+ 165   2        }
+ 166   1        RAMMODE=0x00;
+ 167   1        EA=1;
+ 168   1        return 0;
+ 169   1      }
+ 170          
+ 171          //写DGUS变量数据 addr=DGUS变量地址  startNo 缓存的起始字节位值  len=写入数据字节长度
+ 172          unsigned char T5L_WriteDgusBytes(unsigned int dgus_addr,unsigned char* dataPtr,unsigned int len)
+ 173          {
+ 174   1        unsigned int i;
+ 175   1      
+ 176   1        if (len==0) return 1; 
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 4   
+
+ 177   1      
+ 178   1        i=(unsigned char)(dgus_addr&0x01); //起始地址奇偶判断
+ 179   1        dgus_addr >>=1;
+ 180   1        EA=0;
+ 181   1        ADR_H=0x00;
+ 182   1        ADR_M=(unsigned char)(dgus_addr>>8);
+ 183   1        ADR_L=(unsigned char)(dgus_addr);
+ 184   1        ADR_INC=0x01;
+ 185   1        RAMMODE=0x8F;
+ 186   1        while (APP_ACK==0);
+ 187   1        if(i==1)
+ 188   1        {
+ 189   2          if(len==1)
+ 190   2          {
+ 191   3            RAMMODE=0x82;
+ 192   3            DATA1=*dataPtr++;
+ 193   3            len=0;
+ 194   3          }
+ 195   2          else
+ 196   2          {
+ 197   3            RAMMODE=0x83;
+ 198   3            DATA1=*dataPtr++;
+ 199   3            DATA0=*dataPtr++;     
+ 200   3            len-=2;
+ 201   3          }
+ 202   2          APP_EN=1;
+ 203   2          while (APP_EN==1);
+ 204   2        }
+ 205   1        
+ 206   1        while(len>0)
+ 207   1        {
+ 208   2          switch(len)
+ 209   2          {
+ 210   3            case 1:
+ 211   3              RAMMODE=0x88;
+ 212   3              DATA3=*dataPtr++;
+ 213   3              len=0;
+ 214   3              break;
+ 215   3            case 2:
+ 216   3              RAMMODE=0x8c;
+ 217   3              DATA3=*dataPtr++;
+ 218   3              DATA2=*dataPtr++;
+ 219   3              len=0;
+ 220   3              break;
+ 221   3            case 3:
+ 222   3              RAMMODE=0x8e;
+ 223   3              DATA3=*dataPtr++;
+ 224   3              DATA2=*dataPtr++;
+ 225   3              DATA1=*dataPtr++;       
+ 226   3              len=0;
+ 227   3              break;
+ 228   3            default:
+ 229   3              RAMMODE=0x8f;
+ 230   3              DATA3=*dataPtr++;
+ 231   3              DATA2=*dataPtr++;
+ 232   3              DATA1=*dataPtr++;       
+ 233   3              DATA0=*dataPtr++;
+ 234   3              len-=4;
+ 235   3              break;
+ 236   3          }
+ 237   2          APP_EN=1;
+ 238   2          while (APP_EN==1);
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 5   
+
+ 239   2        }
+ 240   1        RAMMODE=0x00;
+ 241   1        EA=1;
+ 242   1        return 0;
+ 243   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1086    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      18
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

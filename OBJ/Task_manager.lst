@@ -1,0 +1,216 @@
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/15/2026 13:49:20 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TASK_MANAGER
+OBJECT MODULE PLACED IN ..\OBJ\Task_manager.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Task_manager.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\USER;..\FUNC
+                    -_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\Task_manager.lst) TABS(2) O
+                    -BJECT(..\OBJ\Task_manager.obj)
+
+line level    source
+
+   1          //############################################################
+   2          // FILE:  Task_manager.c
+   3          // Created on: 2022年2月20日
+   4          // Author: Jason
+   5          // summary: Task_manager
+   6          //############################################################
+   7          #include "main.h"
+   8          
+   9          void Send_voltage_service(void);
+  10          void Send_voltage_service_spd(u16 spd);
+  11          
+  12          #define Task_Num   4   //task +1
+  13          #define HFPeriod_COUNT     1    //1ms
+  14          #define RTUPeriod_COUNT    50    //50ms
+  15          #define FSMPeriod_COUNT    5    //5ms
+  16          #define TIMERPeriod_COUNT  250   //250ms
+  17          
+  18          TaskTime xdata TasksPare[Task_Num];
+  19          extern code const Product_TypeDef product_data[PRODUCT_TOTAL];
+  20          void Timer_Task_Count(void)
+  21          {
+  22   1        u8 data Task_Count=0;
+  23   1       for(Task_Count=0;Task_Count<Task_Num;Task_Count++)    //TASK_NUM=5
+  24   1       {
+  25   2        if((TasksPare[Task_Count].Task_Count<TasksPare[Task_Count].Task_Period)&&(TasksPare[Task_Count].Task_Per
+             -iod>0))
+  26   2        {
+  27   3          TasksPare[Task_Count].Task_Count++;   // 计数 事件任务计数
+  28   3        }
+  29   2       }
+  30   1      }
+  31          
+  32          void Execute_Task_List_RUN(void)
+  33          {
+  34   1        u8 data Task_Count = 0;
+  35   1       for(Task_Count=0;Task_Count < Task_Num;Task_Count++)
+  36   1       {
+  37   2        if((TasksPare[Task_Count].Task_Count>=TasksPare[Task_Count].Task_Period)&&(TasksPare[Task_Count].Task_Pe
+             -riod > 0))
+  38   2        {
+  39   3          TasksPare[Task_Count].Task_Function();  // 运行计数的时间任务函数
+  40   3          TasksPare[Task_Count].Task_Count=0;
+  41   3        }
+  42   2       }
+  43   1      }
+  44          #define SPK_TIME_OUT_TIMES 5       //蜂鸣器响5次
+  45          void Task_Timer_Sec(void)  //  250ms运行一次
+  46          {
+  47   1        static u16 xdata temp = 0;
+  48   1        static u16 xdata tick = 0;  //1ms计时
+  49   1        static u16 xdata spk = 0;
+  50   1        static u16 xdata spk_tick = 0;
+  51   1        static u16 xdata Once_flag = 0;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/15/2026 13:49:20 PAGE 2   
+
+  52   1        if(win_str_data.state == FSM_READY)
+  53   1        {
+  54   2          win_str_data.run_timer_state = 0;
+  55   2          if(spk)        //停止蜂鸣器
+  56   2          {
+  57   3            spk--;  
+  58   3            spk_tick = 1-spk_tick;
+  59   3            if((spk_tick)&&(win_str_data.alarm == 0))
+  60   3            sys_speaker_work(20);
+  61   3          }
+  62   2        }
+  63   1        
+  64   1        
+  65   1        if(win_str_data.state == FSM_RUN)   //如果状态机为运行状态
+  66   1        {
+  67   2          tick++; 
+  68   2          if(tick >= 4)    //250ms进一次，4次为1s
+  69   2          {
+  70   3            tick = 0;
+  71   3            temp = win_sec_timer_handle(&win_str_data.run_timer_state);
+  72   3            if(temp == 2)
+  73   3            {
+  74   4              if(win_str_data.use_dir == 0) //正转
+  75   4              {
+  76   5                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD); //电机正转运行
+  77   5              }
+  78   4              else
+  79   4              {
+  80   5                if(win_str_data.nm_dir_flag == 0 && Once_flag == 0)//循环反转
+  81   5                {
+  82   6                  RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+  83   6                  win_str_data.nm_dir_flag = 1;
+  84   6                  Once_flag = 1;
+  85   6                }
+  86   5                if(win_str_data.nm_dir_flag == 1 && Once_flag == 0)//循环正转
+  87   5                {
+  88   6                  RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+  89   6                  win_str_data.nm_dir_flag = 0;
+  90   6                  Once_flag = 1;
+  91   6                }
+  92   5              }
+  93   4            }
+  94   3            else if(temp == 1)
+  95   3            {
+  96   4              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+  97   4              Once_flag = 0;
+  98   4            }
+  99   3            else if (temp == 3) spk = 2*SPK_TIME_OUT_TIMES;
+ 100   3            
+ 101   3            win_str_data.used_time++;
+ 102   3            
+ 103   3          }
+ 104   2        }
+ 105   1        sys_write_vp(0x200b,(u8 *)&win_str_data.state,1);
+ 106   1      
+ 107   1      /*********延时5min关风扇*************/
+ 108   1        if(win_str_data.state == FSM_READY)
+ 109   1        {
+ 110   2          win_str_data.fan_tick++;
+ 111   2          if(win_str_data.fan_tick >= 1200)
+ 112   2          {
+ 113   3            win_str_data.fan_tick = 0;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/15/2026 13:49:20 PAGE 3   
+
+ 114   3          }
+ 115   2        } 
+ 116   1        if(win_str_data.bowl_tick > 0) win_str_data.bowl_tick --;
+ 117   1        if(win_str_data.fsm_tick > 0) win_str_data.fsm_tick --;
+ 118   1      }
+ 119          
+ 120          void RTU_send_Rece(void)  // 100ms数据周期，可自行修改周期，最快1ms
+ 121          {
+ 122   1        RTU_Send_Task_Handler();
+ 123   1      }
+ 124          
+ 125          /*********************状态机******************************/
+ 126          void Run_FSM(void)   //FSM状态机 
+ 127          {
+ 128   1        
+ 129   1      
+ 130   1      }
+ 131          void HFPeriod_1msTask(void)
+ 132          {
+ 133   1        btn_click_handler();            //按钮点击事件处理  
+ 134   1        rtu_response_handler();
+ 135   1        win_fresh_window(&str_sys);     //刷新界面
+ 136   1      }
+ 137          
+ 138          
+ 139          void Task_Manage_List_Init(void)
+ 140          {
+ 141   1        TasksPare[0].Task_Period = HFPeriod_COUNT; //PERIOD_COUNT=1    1ms
+ 142   1        TasksPare[0].Task_Count = 1;
+ 143   1        TasksPare[0].Task_Function = HFPeriod_1msTask;  
+ 144   1      
+ 145   1        TasksPare[1].Task_Period = RTUPeriod_COUNT; //2ms
+ 146   1        TasksPare[1].Task_Count = 8;
+ 147   1        TasksPare[1].Task_Function = RTU_send_Rece; //  通讯接收和发送;
+ 148   1      
+ 149   1        TasksPare[2].Task_Period = FSMPeriod_COUNT; //100ms
+ 150   1        TasksPare[2].Task_Count=80;
+ 151   1        TasksPare[2].Task_Function = Run_FSM;//  通讯接收和发送;
+ 152   1      
+ 153   1        TasksPare[3].Task_Period = TIMERPeriod_COUNT;//500ms
+ 154   1        TasksPare[3].Task_Count=300;
+ 155   1        TasksPare[3].Task_Function = Task_Timer_Sec;   // 500ms的LED的闪烁
+ 156   1      }
+ 157          
+ 158          void Send_voltage_service(void)
+ 159          {
+ 160   1        u16 vol_temp;
+ 161   1        //vol_temp = win_level_trans_volt(win_str_data.use_level);   //读取计算电压值
+ 162   1        if(str_sys.mc_para.set_vol != vol_temp)    //读取到下位机电压值不等于设置电压值
+ 163   1        {
+ 164   2          str_sys.mc_para.set_vol = vol_temp;
+ 165   2          RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
+ 166   2        }
+ 167   1      }
+ 168          void Send_voltage_service_spd(u16 spd)
+ 169          {
+ 170   1        u16 vol_temp;
+ 171   1        vol_temp = spd;
+ 172   1        if(str_sys.mc_para.set_vol != vol_temp)    //读取到下位机电压值不等于设置电压值
+ 173   1        {
+ 174   2          str_sys.mc_para.set_vol = vol_temp;
+ 175   2          RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/15/2026 13:49:20 PAGE 4   
+
+ 176   2        }
+ 177   1      }
+ 178          // USER CODE END
+ 179          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    939    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     38       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

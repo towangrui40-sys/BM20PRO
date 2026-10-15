@@ -1,0 +1,19 @@
+"..\OBJ\STARTUP_M5.obj",
+"..\OBJ\main.obj",
+"..\OBJ\Task_manager.obj",
+"..\OBJ\rtu_process.obj",
+"..\OBJ\start_win.obj",
+"..\OBJ\motor_cmd.obj",
+"..\OBJ\func_handler.obj",
+"..\OBJ\rtu_protocol.obj",
+"..\OBJ\crc_calc16.obj",
+"..\OBJ\rtu_api.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\nor_flash.obj",
+"..\OBJ\usart.obj",
+"..\OBJ\T5LDriver.obj",
+"..\OBJ\T5LUart4.obj" 
+TO "..\OBJ\T5_HMI_V1.0" 
+
+PRINT("..\OBJ\T5_HMI_V1.map") REMOVEUNUSED 
+CLASSES (XDATA (X:0x8000-X:0xFFFF), HDATA (X:0x8000-X:0xFFFF)) 

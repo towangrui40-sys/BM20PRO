@@ -1,0 +1,42 @@
+{
+    "configurations": [
+        {
+            "name": "TEMPLATE",
+            "includePath": [
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\USER",
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\FUNC_HANDLER",
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\GUI_APP",
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\HANDWARE\\NOR_FLASH",
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\HANDWARE\\USART",
+                "e:\\Users\\王瑞\\Desktop\\工作文件\\BM20_PRO\\C51文件\\GENERAL_HMI V1.00\\T5LDriver",
+                "D:\\Keil_v5\\C51\\INC"
+            ],
+            "defines": [
+                "__C51__",
+                "__VSCODE_C51__",
+                "reentrant=",
+                "compact=",
+                "small=",
+                "large=",
+                "data=",
+                "idata=",
+                "pdata=",
+                "bdata=",
+                "xdata=",
+                "code=",
+                "bit=char",
+                "sbit=char",
+                "sfr=char",
+                "sfr16=int",
+                "sfr32=int",
+                "interrupt=",
+                "using=",
+                "_at_=",
+                "_priority_=",
+                "_task_="
+            ],
+            "intelliSenseMode": "${default}"
+        }
+    ],
+    "version": 4
+}

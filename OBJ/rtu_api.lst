@@ -1,0 +1,297 @@
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/15/2026 13:49:30 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTU_API
+OBJECT MODULE PLACED IN ..\OBJ\rtu_api.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\FUNC_HANDLER\rtu_api.c LARGE OMF2 OPTIMIZE(3,SIZE) BROWSE INCDIR(..\U
+                    -SER;..\FUNC_HANDLER;..\GUI_APP;..\HANDWARE\NOR_FLASH;..\HANDWARE\USART;..\T5LDriver) DEBUG PRINT(..\OBJ\rtu_api.lst) TAB
+                    -S(2) OBJECT(..\OBJ\rtu_api.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          #include "crc_calc16.h"
+   3          #include "rtu_api.h"
+   4          #include "usart.h"
+   5          #include "rtu_protocol.h"
+   6          #include "rtu_process.h"
+   7          #include "string.h"
+   8          #include "start_win.h"
+   9          
+  10          API_StructDef      xdata api_response;
+  11          API_Data_StructDef api_data;
+  12          unsigned char      api_encrtypt_data[20];
+  13          
+  14          
+  15          unsigned char  API_CheckSum( const unsigned char* buffer_address
+  16                                     , unsigned char        size
+  17          ){
+  18   1        char i = 0;
+  19   1        char buffer_sum = 0;
+  20   1        for (i = 0; i < size - 1; i++) {
+  21   2          buffer_sum += buffer_address[i];
+  22   2        }
+  23   1        return buffer_sum;
+  24   1      }
+  25          
+  26          unsigned char  API_CheckCrc8( const unsigned char* buffer_address
+  27                                     , unsigned char        size
+  28          ){
+  29   1        char i = 0;
+  30   1        char buffer_crc8 = 0;
+  31   1        while(size--)
+  32   1        {
+  33   2          buffer_crc8^=*buffer_address++;
+  34   2          for(i=0;i<8;i++)
+  35   2          {
+  36   3            if(buffer_crc8&0x01)buffer_crc8=(buffer_crc8>>1)^0x8C;
+  37   3            else buffer_crc8 >>= 1;
+  38   3          }
+  39   2        }
+  40   1        return buffer_crc8;
+  41   1      }
+  42          unsigned short API_CheckCrc16(const unsigned char* buffer_address
+  43                                     , unsigned char        size)
+  44          {
+  45   1        unsigned short buffer_crc16 = 0;
+  46   1        buffer_crc16 =CRC16_MODBUS(buffer_address,size);
+  47   1        return buffer_crc16;
+  48   1      }
+  49          unsigned short API_CheckError(unsigned char* rx) 
+  50          {
+  51   1          unsigned short sum = 0, i;
+  52   1          for (i=0; i<12; i++) {
+  53   2              sum += rx[i];
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/15/2026 13:49:30 PAGE 2   
+
+  54   2          }
+  55   1          return sum;
+  56   1      }
+  57          
+  58          #ifdef TEA_CHECK
+              //
+              // Build Encrypt Package
+              //
+              unsigned short API_BuildSendPackage( unsigned char* desc
+                                                 , unsigned char* src
+                                                 , unsigned short size
+                                                 , unsigned char  type
+              ){
+                  static unsigned char buffer[20] = {0};
+                  unsigned char i,buffer_sum = 0;
+                  
+                  // Head (3)
+                  desc[0] = 0x6A;                                   // 1
+                  desc[1] = 0x55;                                   // 2
+                  switch (type)                                     // 3
+                  {
+                      case 1: desc[2] = 0x31; break;
+                      case 2: desc[2] = 0x32; break;
+                      case 3: desc[2] = 0x30; break;
+                  }
+                
+                  // Key(4) + Data(12) = (16)
+                  memcpy(buffer, (unsigned char*)&tea_checkkey, 4); // 4-7 :key  (4)
+                  memcpy(buffer + 4, src, size);                    // 8-19:data (12)
+                  tea_encrypt(buffer, desc + 3, size, type);        // encrypt
+              
+                  // Sum (1)
+                  for (i = 0; i < size + 4 + 3 + 1 - 1; i++) {
+                      buffer_sum += desc[i];
+                  }
+                  desc[size + 4 + 3] = buffer_sum;                  // 20
+              
+                  return size + 4 + 3 + 1;
+              }
+              
+              unsigned char* API_SendKeyError( void )
+              {
+                  static unsigned char mErrorKey[12] = {0};
+                  uint8_t* p = (uint8_t*)&tea_checkkey;
+                  
+                  // Data for key 
+                  mErrorKey[0] = 0x32;
+                  mErrorKey[1] = 0x32;
+                  mErrorKey[2] = p[0]; 
+                  mErrorKey[3] = p[1];
+                  mErrorKey[4] = p[2];
+                  mErrorKey[5] = p[3];
+                  
+                  // ¼ÓÃÜ
+                  API_BuildSendPackage(api_encrtypt_data, mErrorKey, 12, 2);
+                  return api_encrtypt_data;
+              }
+              #endif
+ 112          
+ 113          //unsigned char* API_BuildPackage( API_StructDef *api)
+ 114          //{
+ 115          //  static unsigned char local_addr = 0;
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/15/2026 13:49:30 PAGE 3   
+
+ 116          //    #ifdef  ROLE_485_SLAVE  
+ 117          //    local_addr = ReadAddress();
+ 118          //    #endif
+ 119          //    local_addr = local_addr|M_TARGET_ADDR;
+ 120          //  
+ 121          //    // data init
+ 122          //    memset((void*)(api_data.Data), 0, 8);
+ 123          //    
+ 124          //    // response api request.
+ 125          //    api_response.Remote_Addr = api->Remote_Addr;
+ 126          //    api_response.Source_Addr = local_addr;//api->Source_Addr;
+ 127          //    api_response.Command     = api->Command;        
+ 128          //  
+ 129          //    memcpy((void*)(api_response.Data), (void*)(api_data.Data), 8);
+ 130          //  
+ 131          //    api_response.Crc8  = API_CheckCrc8((unsigned char*)&api_response, 11);
+ 132          //        
+ 133          //    
+ 134          //  return (unsigned char*)&api_response;
+ 135          //}
+ 136          
+ 137          unsigned char* API_Response( unsigned char* RxBuffer                           
+ 138          ){
+ 139   1          u8 idata i;
+ 140   1        // data init
+ 141   1          memset((void*)(api_response.Data), 0, 128);        
+ 142   1        // call dispose at main
+ 143   1          api_response.Remote_Addr = RxBuffer[0];
+ 144   1          api_response.funcode = RxBuffer[1]; 
+ 145   1          api_response.addr = rtu_structure.addr;
+ 146   1          if(api_response.funcode == 0x03)
+ 147   1          {
+ 148   2            api_response.len = RxBuffer[2]/2;;
+ 149   2            for(i = 0;i<api_response.len;i++)
+ 150   2            {
+ 151   3              api_response.Data[i] =  RxBuffer[4+(i*2)]+ (RxBuffer[3+(i*2)]<<8);   
+ 152   3            }     
+ 153   2          }
+ 154   1          else
+ 155   1          {
+ 156   2            api_response.len = RxBuffer[5]+ (RxBuffer[4]<<8);
+ 157   2          } 
+ 158   1          API_Callback_Handler(&api_response, &api_data);
+ 159   1             
+ 160   1        return (unsigned char*)&api_response;
+ 161   1      }
+ 162          unsigned char  API_SerailLoop( unsigned char     rx_data
+ 163                                       , API_DataReceived  rx_callback
+ 164          ){
+ 165   1          static unsigned char xdata mPkg[256]            = {0};
+ 166   1          static unsigned char rx_state            = 0;
+ 167   1          static unsigned char mPkg_length_counter = 0;
+ 168   1          static unsigned char data_length_counter = 0;
+ 169   1          static unsigned char data_length         = 0;
+ 170   1          unsigned short idata recv_crc16 = 0;
+ 171   1          
+ 172   1          switch(rx_state)
+ 173   1          {
+ 174   2              case 0:                                             // device station
+ 175   2          if(rx_data == 0x03)
+ 176   2          {
+ 177   3            mPkg[mPkg_length_counter++] = rx_data;
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/15/2026 13:49:30 PAGE 4   
+
+ 178   3            rx_state++; 
+ 179   3                    
+ 180   3          }
+ 181   2          else
+ 182   2          {
+ 183   3            rx_state = 0;
+ 184   3            mPkg_length_counter =0;
+ 185   3            memset(mPkg, 0, 256);             
+ 186   3          }
+ 187   2              break;
+ 188   2              case 1:                                             // func code
+ 189   2          switch(rx_data)
+ 190   2          {
+ 191   3            case RTU_FUNC_CODE_RD:                                  //rd
+ 192   3              mPkg[mPkg_length_counter++] = rx_data;
+ 193   3              rx_state++;
+ 194   3      
+ 195   3            break;
+ 196   3            case RTU_FUNC_CODE_WR:     //wr
+ 197   3                mPkg[mPkg_length_counter++] = rx_data;
+ 198   3                data_length = 4;
+ 199   3                data_length_counter = 0;
+ 200   3                rx_state = 3;
+ 201   3               break;                               //wr
+ 202   3            case RTU_FUNC_CODE_CWR:                                 //cwr
+ 203   3            case RTU_FUNC_CODE_ERROR:                               //errorcode
+ 204   3              mPkg[mPkg_length_counter++] = rx_data;
+ 205   3              rx_state = 6;
+ 206   3            break;
+ 207   3            default:
+ 208   3            rx_state = 0;
+ 209   3                mPkg_length_counter = 0;
+ 210   3                memset(mPkg, 0, 256);
+ 211   3            break;
+ 212   3              }
+ 213   2              break;
+ 214   2              case 2:                                             // len
+ 215   2            mPkg[mPkg_length_counter++] = rx_data;  
+ 216   2            data_length = rx_data;
+ 217   2            data_length_counter = 0;        
+ 218   2            rx_state++;
+ 219   2        
+ 220   2              break;
+ 221   2              case 3:                                             // data
+ 222   2                  mPkg[mPkg_length_counter++] = rx_data;
+ 223   2                  data_length_counter++;
+ 224   2                  if(data_length_counter == data_length)
+ 225   2                      rx_state++;
+ 226   2              break;
+ 227   2              case 4:                                             // rev crc 
+ 228   2                  mPkg[mPkg_length_counter++] = rx_data;
+ 229   2                  rx_state++;
+ 230   2                  
+ 231   2              break;
+ 232   2              case 5:                   // check crc
+ 233   2                  mPkg[mPkg_length_counter++] = rx_data;
+ 234   2                  recv_crc16 = mPkg[mPkg_length_counter-2]+(mPkg[mPkg_length_counter-1]<<8);
+ 235   2            if (API_CheckCrc16(mPkg, mPkg_length_counter-2) == recv_crc16)
+ 236   2            {
+ 237   3      
+ 238   3              rx_callback(mPkg , mPkg_length_counter-2);  //save data,back callback function  
+ 239   3              rx_state = 0;
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/15/2026 13:49:30 PAGE 5   
+
+ 240   3              mPkg_length_counter = 0;
+ 241   3              memset(mPkg, 0, 256);  
+ 242   3              return 1;
+ 243   3                  }
+ 244   2                  rx_state = 0;
+ 245   2                  mPkg_length_counter = 0;
+ 246   2                  memset(mPkg, 0, 256);  
+ 247   2              break;
+ 248   2              case 6:                       //error code
+ 249   2                  mPkg[mPkg_length_counter++] = rx_data;
+ 250   2                    rx_state = 4;           
+ 251   2              break;
+ 252   2              default:                      // error
+ 253   2                  rx_state = 0;
+ 254   2                  mPkg_length_counter = 0;
+ 255   2                  memset(mPkg, 0, 256);
+ 256   2              break;
+ 257   2          }
+ 258   1        
+ 259   1          return 0;
+ 260   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1199    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    800      32
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----       3
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
