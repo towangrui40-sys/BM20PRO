@@ -596,7 +596,7 @@ static void win_para_keypad_btn_click_handler(u16 btn_val)
 	#define  BTN_VAL_8      8
 	#define  BTN_VAL_9		9
 	#define  BTN_VAL_0		10	
-	#define  BTN_VAL_cancel	11	
+	#define  BTN_VAL_cancel	11	1
 	 
 	switch(win_str_data.paras_sel)
 	{
