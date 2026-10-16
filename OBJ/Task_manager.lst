@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 09:49:57 PAGE 1   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TASK_MANAGER
@@ -11,196 +11,590 @@ line level    source
 
    1          //############################################################
    2          // FILE:  Task_manager.c
-   3          // Created on: 2022��2��20��
-   4          // Author: Jason
-   5          // summary: Task_manager
-   6          //############################################################
-   7          #include "main.h"
-   8          
-   9          void Send_voltage_service(void);
-  10          void Send_voltage_service_spd(u16 spd);
-  11          
-  12          #define Task_Num   4   //task +1
-  13          #define HFPeriod_COUNT     1    //1ms
-  14          #define RTUPeriod_COUNT    50    //50ms
-  15          #define FSMPeriod_COUNT    5    //5ms
-  16          #define TIMERPeriod_COUNT  250   //250ms
-  17          
-  18          TaskTime xdata TasksPare[Task_Num];
-  19          extern code const Product_TypeDef product_data[PRODUCT_TOTAL];
+   3          // summary: Task_manager
+   4          //############################################################
+   5          #include "main.h"
+   6          
+   7          #define Task_Num   4   //task +1
+   8          #define HFPeriod_COUNT     1    //1ms
+   9          #define RTUPeriod_COUNT    50    //50ms
+  10          #define FSMPeriod_COUNT    200   //200ms
+  11          #define TIMERPeriod_COUNT  250   //250ms
+  12          
+  13          void Send_voltage_service(u16 send_speed);
+  14          void tank1_material(void);
+  15          void tank2_material(void);
+  16          
+  17          TaskTime xdata TasksPare[Task_Num];
+  18          extern code const Product_TypeDef product_data[PRODUCT_TOTAL];
+  19          
   20          void Timer_Task_Count(void)
   21          {
-  22   1        u8 data Task_Count=0;
-  23   1       for(Task_Count=0;Task_Count<Task_Num;Task_Count++)    //TASK_NUM=5
-  24   1       {
-  25   2        if((TasksPare[Task_Count].Task_Count<TasksPare[Task_Count].Task_Period)&&(TasksPare[Task_Count].Task_Per
-             -iod>0))
-  26   2        {
-  27   3          TasksPare[Task_Count].Task_Count++;
-  28   3        }
-  29   2       }
+  22   1        u8 data Task_Count = 0;
+  23   1        for(Task_Count = 0;Task_Count < Task_Num;Task_Count++)
+  24   1        {
+  25   2          if((TasksPare[Task_Count].Task_Count < TasksPare[Task_Count].Task_Period) && (TasksPare[Task_Count].Task
+             -_Period > 0))
+  26   2          {
+  27   3            TasksPare[Task_Count].Task_Count++;
+  28   3          }
+  29   2        }
   30   1      }
   31          
   32          void Execute_Task_List_RUN(void)
   33          {
   34   1        u8 data Task_Count = 0;
-  35   1       for(Task_Count=0;Task_Count < Task_Num;Task_Count++)
-  36   1       {
-  37   2        if((TasksPare[Task_Count].Task_Count>=TasksPare[Task_Count].Task_Period)&&(TasksPare[Task_Count].Task_Pe
-             -riod > 0))
-  38   2        {
-  39   3          TasksPare[Task_Count].Task_Function();
-  40   3          TasksPare[Task_Count].Task_Count=0;
-  41   3        }
-  42   2       }
+  35   1        for(Task_Count = 0;Task_Count < Task_Num;Task_Count++)
+  36   1        {
+  37   2          if((TasksPare[Task_Count].Task_Count >= TasksPare[Task_Count].Task_Period) && (TasksPare[Task_Count].Tas
+             -k_Period > 0))
+  38   2          {
+  39   3            TasksPare[Task_Count].Task_Function();
+  40   3            TasksPare[Task_Count].Task_Count = 0;
+  41   3          }
+  42   2        }
   43   1      }
-  44          #define SPK_TIME_OUT_TIMES 5
-  45          void Task_Timer_Sec(void)
-  46          {
-  47   1        static u16 xdata temp = 0;
-  48   1        static u16 xdata tick = 0;
-  49   1        static u16 xdata spk = 0;
-  50   1        static u16 xdata spk_tick = 0;
-  51   1        static u16 xdata Once_flag = 0;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 09:49:57 PAGE 2   
+  44          
+  45          #define SPK_TIME_OUT_TIMES 5
+  46          
+  47          void Task_Timer_Sec(void)
+  48          {
+  49   1        static u16 xdata temp = 0;
+  50   1        static u16 xdata tick = 0;
+  51   1        static u16 xdata spk = 0;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 2   
 
-  52   1        if(win_str_data.state == FSM_READY)
-  53   1        {
-  54   2          win_str_data.run_timer_state = 0;
-  55   2          if(spk)
-  56   2          {
-  57   3            spk--;  
-  58   3            spk_tick = 1-spk_tick;
-  59   3            if((spk_tick)&&(win_str_data.alarm == 0))
-  60   3            sys_speaker_work(20);
-  61   3          }
-  62   2        }
-  63   1        
-  64   1        
-  65   1        if(win_str_data.state == FSM_RUN) 
-  66   1        {
-  67   2          tick++; 
-  68   2          if(tick >= 4) 
-  69   2          {
-  70   3            tick = 0;
-  71   3            temp = win_sec_timer_handle(&win_str_data.run_timer_state);
-  72   3            if(temp == 2)
-  73   3            {
-  74   4              if(win_str_data.use_dir == 0)
-  75   4              {
-  76   5                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
-  77   5              }
-  78   4              else
-  79   4              {
-  80   5                if(win_str_data.nm_dir_flag == 0 && Once_flag == 0)
-  81   5                {
-  82   6                  RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
-  83   6                  win_str_data.nm_dir_flag = 1;
-  84   6                  Once_flag = 1;
-  85   6                }
-  86   5                if(win_str_data.nm_dir_flag == 1 && Once_flag == 0)
-  87   5                {
-  88   6                  RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
-  89   6                  win_str_data.nm_dir_flag = 0;
-  90   6                  Once_flag = 1;
-  91   6                }
-  92   5              }
-  93   4            }
-  94   3            else if(temp == 1)
-  95   3            {
-  96   4              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
-  97   4              Once_flag = 0;
-  98   4            }
-  99   3            else if (temp == 3) spk = 2*SPK_TIME_OUT_TIMES;
- 100   3            
- 101   3            win_str_data.used_time++;
- 102   3            
- 103   3          }
- 104   2        }
- 105   1        sys_write_vp(0x200b,(u8 *)&win_str_data.state,1);
- 106   1      
- 107   1      /*********��ʱ5min�ط���*************/
- 108   1        if(win_str_data.state == FSM_READY)
- 109   1        {
- 110   2          win_str_data.fan_tick++;
- 111   2          if(win_str_data.fan_tick >= 1200)
- 112   2          {
- 113   3            win_str_data.fan_tick = 0;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 09:49:57 PAGE 3   
+  52   1        static u16 xdata spk_tick = 0;
+  53   1        static u16 xdata Once_flag = 0;
+  54   1      
+  55   1        if(win_str_data.state == FSM_READY)
+  56   1        {
+  57   2          win_str_data.run_timer_state = 0;
+  58   2          if(spk)
+  59   2          {
+  60   3            spk--;
+  61   3            spk_tick = 1 - spk_tick;
+  62   3            if((spk_tick) && (win_str_data.alarm == 0))
+  63   3              sys_speaker_work(20);
+  64   3          }
+  65   2        }
+  66   1      
+  67   1        if(win_str_data.state == FSM_RUN)
+  68   1        {
+  69   2          tick++;
+  70   2          if(tick >= 4)
+  71   2          {
+  72   3            tick = 0;
+  73   3            temp = win_sec_timer_handle(&win_str_data.run_timer_state);
+  74   3            if(temp == 2)
+  75   3            {
+  76   4              if(win_str_data.use_dir == 0)
+  77   4              {
+  78   5                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+  79   5              }
+  80   4              else
+  81   4              {
+  82   5                if(win_str_data.nm_dir_flag == 0 && Once_flag == 0)
+  83   5                {
+  84   6                  RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+  85   6                  win_str_data.nm_dir_flag = 1;
+  86   6                  Once_flag = 1;
+  87   6                }
+  88   5                if(win_str_data.nm_dir_flag == 1 && Once_flag == 0)
+  89   5                {
+  90   6                  RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+  91   6                  win_str_data.nm_dir_flag = 0;
+  92   6                  Once_flag = 1;
+  93   6                }
+  94   5              }
+  95   4            }
+  96   3            else if(temp == 1)
+  97   3            {
+  98   4              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+  99   4              Once_flag = 0;
+ 100   4            }
+ 101   3            else if(temp == 3)
+ 102   3            {
+ 103   4              spk = 2 * SPK_TIME_OUT_TIMES;
+ 104   4            }
+ 105   3      
+ 106   3            win_str_data.used_time++;
+ 107   3          }
+ 108   2        }
+ 109   1      
+ 110   1        sys_write_vp(0x200b,(u8 *)&win_str_data.state,1);
+ 111   1      
+ 112   1        if(win_str_data.state == FSM_READY)
+ 113   1        {
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 3   
 
- 114   3          }
- 115   2        } 
- 116   1        if(win_str_data.bowl_tick > 0) win_str_data.bowl_tick --;
- 117   1        if(win_str_data.fsm_tick > 0) win_str_data.fsm_tick --;
- 118   1      }
- 119          
- 120          void RTU_send_Rece(void)
- 121          {
- 122   1        RTU_Send_Task_Handler();
+ 114   2          win_str_data.fan_tick++;
+ 115   2          if(win_str_data.fan_tick >= 1200)
+ 116   2          {
+ 117   3            RTU_Cmd_Pending(RTU_ACFAN_STOP,0);
+ 118   3            win_str_data.fan_tick = 0;
+ 119   3          }
+ 120   2        }
+ 121   1        if(win_str_data.bowl_tick > 0) win_str_data.bowl_tick--;
+ 122   1        if(win_str_data.fsm_tick > 0) win_str_data.fsm_tick--;
  123   1      }
  124          
- 125          void Run_FSM(void)
+ 125          void RTU_send_Rece(void)
  126          {
- 127   1        
- 128   1      
- 129   1      }
- 130          void HFPeriod_1msTask(void)
+ 127   1        RTU_Send_Task_Handler();
+ 128   1      }
+ 129          
+ 130          void Run_FSM(void)
  131          {
- 132   1        btn_click_handler();
- 133   1        rtu_response_handler();
- 134   1        win_fresh_window(&str_sys);
- 135   1      }
- 136          
- 137          
- 138          void Task_Manage_List_Init(void)
- 139          {
- 140   1        TasksPare[0].Task_Period = HFPeriod_COUNT; //PERIOD_COUNT=1    1ms
- 141   1        TasksPare[0].Task_Count = 1;
- 142   1        TasksPare[0].Task_Function = HFPeriod_1msTask;  
- 143   1      
- 144   1        TasksPare[1].Task_Period = RTUPeriod_COUNT; //2ms
- 145   1        TasksPare[1].Task_Count = 8;
- 146   1        TasksPare[1].Task_Function = RTU_send_Rece;
- 147   1      
- 148   1        TasksPare[2].Task_Period = FSMPeriod_COUNT; //100ms
- 149   1        TasksPare[2].Task_Count=80;
- 150   1        TasksPare[2].Task_Function = Run_FSM;
- 151   1      
- 152   1        TasksPare[3].Task_Period = TIMERPeriod_COUNT;//500ms
- 153   1        TasksPare[3].Task_Count=300;
- 154   1        TasksPare[3].Task_Function = Task_Timer_Sec;
- 155   1      }
- 156          
- 157          void Send_voltage_service(void)
- 158          {
- 159   1        u16 vol_temp;
- 160   1        //vol_temp = win_level_trans_volt(win_str_data.use_level);
- 161   1        if(str_sys.mc_para.set_vol != vol_temp)
- 162   1        {
- 163   2          str_sys.mc_para.set_vol = vol_temp;
- 164   2          RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
- 165   2        }
- 166   1      }
- 167          void Send_voltage_service_spd(u16 spd)
- 168          {
- 169   1        u16 vol_temp;
- 170   1        vol_temp = spd;
- 171   1        if(str_sys.mc_para.set_vol != vol_temp)
- 172   1        {
- 173   2          str_sys.mc_para.set_vol = vol_temp;
- 174   2          RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
- 175   2        }
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 09:49:57 PAGE 4   
+ 132   1        u16 xdata temp;
+ 133   1        static u16 xdata bowl_runstate;
+ 134   1        switch(win_str_data.state)
+ 135   1        {
+ 136   2          case FSM_INIT:
+ 137   2            win_str_data.state = FSM_READY;
+ 138   2            break;
+ 139   2          case FSM_READY:
+ 140   2            win_str_data.disp_cycle = win_str_data.use_cycle;
+ 141   2            win_str_data.disp_run_time = win_str_data.use_run_time;
+ 142   2            win_str_data.disp_pause_time = win_str_data.use_pause_time;
+ 143   2            win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_da
+             -ta.use_pause_time)) - win_str_data.use_pause_time) * 60);
+ 144   2            win_disp_level(MAIN_TIMER,win_str_data.use_level);
+ 145   2            win_str_data.fsm_state = 0;
+ 146   2      
+ 147   2            if(win_str_data.start == 1)
+ 148   2            {
+ 149   3              if(win_str_data.tank1_install == 1 && win_str_data.tank2_install == 1)
+ 150   3              {
+ 151   4                RTU_Cmd_Pending(RTU_ACFAN_RUN,1);
+ 152   4                win_str_data.state = FSM_START;
+ 153   4              }
+ 154   3              else if(win_str_data.tank1_install == 2)
+ 155   3              {
+ 156   4                win_str_data.start = 0;
+ 157   4                win_change_page(WORK_PAGE);
+ 158   4              }
+ 159   3              else if(win_str_data.tank2_install == 2)
+ 160   3              {
+ 161   4                win_str_data.start = 0;
+ 162   4                win_change_page(WORK_PAGE);
+ 163   4              }
+ 164   3            }
+ 165   2            else
+ 166   2            {
+ 167   3              if(win_str_data.lid_cmd == 0x11) // open lid
+ 168   3              {
+ 169   4                win_change_page(PLEASE_WAIT_PAGE);
+ 170   4                Send_voltage_service(18);
+ 171   4                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 172   4                win_str_data.lid_cmd = 0x01;
+ 173   4              }
+ 174   3            }
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 4   
 
- 176   1      }
- 177          // USER CODE END
- 178          
+ 175   2            break;
+ 176   2      
+ 177   2          case FSM_START:
+ 178   2            Send_voltage_service(win_str_data.use_level);
+ 179   2            RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 180   2            win_str_data.pc_run_state = 1;
+ 181   2            win_str_data.nm_dir_flag = 0;
+ 182   2            win_str_data.state = FSM_RUN;
+ 183   2            break;
+ 184   2      
+ 185   2          case FSM_CHECK_POSITION:
+ 186   2            if(str_sys.case_state == 0x01)  // lid open in place
+ 187   2            {
+ 188   3              Send_voltage_service(23);
+ 189   3              win_change_page(SELECT_TANK_PAGE);
+ 190   3              win_str_data.state = FSM_sel_bowlL;
+ 191   3            }
+ 192   2            break;
+ 193   2      
+ 194   2          case FSM_sel_bowlL:
+ 195   2            if(win_str_data.sel_bowll == 1)
+ 196   2            {
+ 197   3              RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 198   3              bowl_runstate = 1;
+ 199   3              win_str_data.bowl_tick = 12;
+ 200   3              win_str_data.sel_bowll = 0;
+ 201   3            }
+ 202   2            else if(win_str_data.sel_bowll == 2)
+ 203   2            {
+ 204   3              RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+ 205   3              bowl_runstate = 2;
+ 206   3              win_str_data.bowl_tick = 12;
+ 207   3              win_str_data.sel_bowll = 0;
+ 208   3            }
+ 209   2      
+ 210   2            if(bowl_runstate == 1 && str_sys.magnet_num == 0x01)
+ 211   2            {
+ 212   3              win_str_data.bowl_tick = 0;
+ 213   3              bowl_runstate = 0;
+ 214   3            }
+ 215   2            if(bowl_runstate == 2 && str_sys.magnet_num == 0x02)
+ 216   2            {
+ 217   3              win_str_data.bowl_tick = 0;
+ 218   3              bowl_runstate = 0;
+ 219   3            }
+ 220   2      
+ 221   2            if(str_sys.magnet_num == 0x01)
+ 222   2            {
+ 223   3              temp = 1;
+ 224   3              sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
+ 225   3              temp = 0;
+ 226   3              sys_write_vp(ICON_BOWL_SEL2_ADDR,(u8 *)&temp,1);
+ 227   3            }
+ 228   2            else if(str_sys.magnet_num == 0x02)
+ 229   2            {
+ 230   3              temp = 0;
+ 231   3              sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
+ 232   3              temp = 1;
+ 233   3              sys_write_vp(ICON_BOWL_SEL2_ADDR,(u8 *)&temp,1);
+ 234   3            }
+ 235   2            else
+ 236   2            {
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 5   
+
+ 237   3              temp = 0;
+ 238   3              sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
+ 239   3              sys_write_vp(ICON_BOWL_SEL2_ADDR,(u8 *)&temp,1);
+ 240   3            }
+ 241   2      
+ 242   2            if(win_str_data.bowl_tick == 0)
+ 243   2            {
+ 244   3              if(str_sys.mc_para.set_run != MC_STOP)
+ 245   3              {
+ 246   4                str_sys.mc_para.set_run = MC_STOP;
+ 247   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 248   4              }
+ 249   3            }
+ 250   2      
+ 251   2            if(win_str_data.lid_cmd == 0x10) // close lid
+ 252   2            {
+ 253   3              win_str_data.lid_cmd = 0x00;
+ 254   3      
+ 255   3            }
+ 256   2            break;
+ 257   2      
+ 258   2      
+ 259   2          case FSM_RUN:
+ 260   2            Send_voltage_service(win_str_data.use_level);
+ 261   2            if(win_str_data.disp_count_time == 0)
+ 262   2            {
+ 263   3              win_str_data.start = 0;
+ 264   3            }
+ 265   2      
+ 266   2            if(win_str_data.pause == 1)
+ 267   2            {
+ 268   3              win_str_data.fsm_state = 1;
+ 269   3              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 270   3              win_str_data.state = FSM_SLOW_DOWN;
+ 271   3              win_change_page(WORK_PAGE_NO_TOUCH);
+ 272   3            }
+ 273   2            else if(win_str_data.start == 0)
+ 274   2            {
+ 275   3              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 276   3              win_str_data.state = FSM_SLOW_DOWN;
+ 277   3              win_change_page(WORK_PAGE_NO_TOUCH);
+ 278   3            }
+ 279   2      
+ 280   2            if(str_sys.run_state >= (win_str_data.use_level - 5))
+ 281   2              str_sys.run_state = win_str_data.use_level;
+ 282   2            win_disp_level(MAIN_TIMER,str_sys.run_state);
+ 283   2      
+ 284   2            if(str_sys.str_mems.z <= 0) str_sys.str_mems.z = 0;
+ 285   2            if(str_sys.str_mems.z > win_str_data.shake)
+ 286   2            {
+ 287   3              RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 288   3              win_str_data.start = 0;
+ 289   3              win_str_data.pause = 1;
+ 290   3              win_str_data.shak_warning = 1;
+ 291   3              win_change_page(WORK_SHAKE_WARNING_PAGE);
+ 292   3            }
+ 293   2            break;
+ 294   2      
+ 295   2          case FSM_SLOW_DOWN:
+ 296   2            win_disp_level(MAIN_TIMER,str_sys.run_state);
+ 297   2            if(str_sys.run_state == 0)
+ 298   2            {
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 6   
+
+ 299   3              win_str_data.pc_run_state = 0;
+ 300   3              win_change_page(WORK_PAGE);
+ 301   3              if(win_str_data.fsm_state == 1)
+ 302   3                win_str_data.state = FSM_PAUSE;
+ 303   3              else
+ 304   3                win_str_data.state = FSM_STOP;
+ 305   3            }
+ 306   2            break;
+ 307   2      
+ 308   2          case FSM_PAUSE:
+ 309   2            if((win_str_data.start == 1) && (win_str_data.pause == 0))
+ 310   2            {
+ 311   3              if(win_str_data.tank1_install == 1 && win_str_data.tank2_install == 1)
+ 312   3              {
+ 313   4                Send_voltage_service(win_str_data.use_level);
+ 314   4      
+ 315   4                if(win_str_data.nm_dir_flag == 0)
+ 316   4                {
+ 317   5                  RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 318   5                }
+ 319   4                if(win_str_data.nm_dir_flag == 1)
+ 320   4                {
+ 321   5                  RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+ 322   5                }
+ 323   4                win_str_data.pc_run_state = 1;
+ 324   4                win_str_data.state = FSM_RUN;
+ 325   4              }
+ 326   3              else if(win_str_data.tank1_install == 2)
+ 327   3              {
+ 328   4                win_str_data.start = 0;
+ 329   4                win_str_data.pause = 1;
+ 330   4                win_change_page(WORK_PAGE);
+ 331   4              }
+ 332   3              else if(win_str_data.tank2_install == 2)
+ 333   3              {
+ 334   4                win_str_data.start = 0;
+ 335   4                win_str_data.pause = 1;
+ 336   4                win_change_page(WORK_PAGE);
+ 337   4              }
+ 338   3            }
+ 339   2      
+ 340   2            if((win_str_data.start == 0) && (win_str_data.pause == 0))
+ 341   2            {
+ 342   3              win_str_data.state = FSM_STOP;
+ 343   3            }
+ 344   2      
+ 345   2            if(win_str_data.lid_cmd == 0x11) // open lid
+ 346   2            {
+ 347   3              win_change_page(PLEASE_WAIT_PAGE);
+ 348   3              Send_voltage_service(18);
+ 349   3              RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 350   3              win_str_data.lid_cmd = 0x01;
+ 351   3            }
+ 352   2            break;
+ 353   2      
+ 354   2          case FSM_STOP:
+ 355   2            win_str_data.fan_tick = 0;
+ 356   2            win_str_data.used_time_l = win_str_data.used_time & 0xffff;
+ 357   2            win_str_data.used_time_h = (win_str_data.used_time>>16) & 0xffff;
+ 358   2            norflash_write(RUNTIME_MIN_HADDR,(u8*)&win_str_data.used_time_h,2);
+ 359   2      
+ 360   2            win_disp_run_time(MAIN_TIMER,win_str_data.use_run_time);
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 7   
+
+ 361   2            win_disp_pause_time(MAIN_TIMER,win_str_data.use_pause_time);
+ 362   2            win_disp_cycle(MAIN_TIMER,win_str_data.use_cycle);
+ 363   2            win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_da
+             -ta.use_pause_time)) - win_str_data.use_pause_time) * 60);
+ 364   2            win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
+ 365   2      
+ 366   2            win_str_data.state = FSM_READY;
+ 367   2            break;
+ 368   2      
+ 369   2          default:
+ 370   2            break;
+ 371   2        }
+ 372   1      }
+ 373          
+ 374          void HFPeriod_1msTask(void)
+ 375          {
+ 376   1        btn_click_handler();
+ 377   1        rtu_response_handler();
+ 378   1        win_fresh_window(&str_sys);
+ 379   1      
+ 380   1        if(win_str_data.state == FSM_READY || win_str_data.state == FSM_PAUSE)
+ 381   1        {
+ 382   2          if((str_sys.magnet_num == 0x02 || str_sys.magnet_num == 0x04) && win_str_data.lid_cmd == 0x01)
+ 383   2          {
+ 384   3            win_str_data.lid_cmd = 0x00;
+ 385   3            win_change_page(PLEASE_WAIT_PAGE);
+ 386   3            RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 387   3            RTU_Cmd_Pending(RTU_CASE_ACTION, OPEN);
+ 388   3            win_str_data.state = FSM_CHECK_POSITION;
+ 389   3          }
+ 390   2        }
+ 391   1      }
+ 392          
+ 393          void Task_Manage_List_Init(void)
+ 394          {
+ 395   1        TasksPare[0].Task_Period = HFPeriod_COUNT;
+ 396   1        TasksPare[0].Task_Count = 1;
+ 397   1        TasksPare[0].Task_Function = HFPeriod_1msTask;
+ 398   1      
+ 399   1        TasksPare[1].Task_Period = RTUPeriod_COUNT;
+ 400   1        TasksPare[1].Task_Count = 8;
+ 401   1        TasksPare[1].Task_Function = RTU_send_Rece;
+ 402   1      
+ 403   1        TasksPare[2].Task_Period = FSMPeriod_COUNT;
+ 404   1        TasksPare[2].Task_Count = 80;
+ 405   1        TasksPare[2].Task_Function = Run_FSM;
+ 406   1      
+ 407   1        TasksPare[3].Task_Period = TIMERPeriod_COUNT;
+ 408   1        TasksPare[3].Task_Count = 300;
+ 409   1        TasksPare[3].Task_Function = Task_Timer_Sec;
+ 410   1      }
+ 411          
+ 412          void tank1_material(void)
+ 413          {
+ 414   1        if(win_str_data.language == 0)
+ 415   1        {
+ 416   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 0;
+ 417   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 1;
+ 418   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 2;
+ 419   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 3;
+ 420   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 4;
+ 421   2        }
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 8   
+
+ 422   1        else if(win_str_data.language == 1)
+ 423   1        {
+ 424   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 5;
+ 425   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 6;
+ 426   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 7;
+ 427   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 8;
+ 428   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 9;
+ 429   2        }
+ 430   1        else if(win_str_data.language == 2)
+ 431   1        {
+ 432   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 10;
+ 433   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 11;
+ 434   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 12;
+ 435   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 13;
+ 436   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 14;
+ 437   2        }
+ 438   1        else if(win_str_data.language == 3)
+ 439   1        {
+ 440   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 15;
+ 441   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 16;
+ 442   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 17;
+ 443   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 18;
+ 444   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 19;
+ 445   2        }
+ 446   1        else if(win_str_data.language == 4)
+ 447   1        {
+ 448   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 20;
+ 449   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 21;
+ 450   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 22;
+ 451   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 23;
+ 452   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 24;
+ 453   2        }
+ 454   1        else if(win_str_data.language == 5)
+ 455   1        {
+ 456   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 25;
+ 457   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 26;
+ 458   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 27;
+ 459   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 28;
+ 460   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 29;
+ 461   2        }
+ 462   1        else if(win_str_data.language == 6)
+ 463   1        {
+ 464   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 30;
+ 465   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 31;
+ 466   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 32;
+ 467   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 33;
+ 468   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 34;
+ 469   2        }
+ 470   1        else if(win_str_data.language == 7)
+ 471   1        {
+ 472   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank1_material = 35;
+ 473   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank1_material = 36;
+ 474   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank1_material = 37;
+ 475   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank1_material = 38;
+ 476   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank1_material = 39;
+ 477   2        }
+ 478   1      }
+ 479          
+ 480          void tank2_material(void)
+ 481          {
+ 482   1        if(win_str_data.language == 0)
+ 483   1        {
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 9   
+
+ 484   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 0;
+ 485   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 1;
+ 486   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 2;
+ 487   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 3;
+ 488   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 4;
+ 489   2        }
+ 490   1        else if(win_str_data.language == 1)
+ 491   1        {
+ 492   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 5;
+ 493   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 6;
+ 494   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 7;
+ 495   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 8;
+ 496   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 9;
+ 497   2        }
+ 498   1        else if(win_str_data.language == 2)
+ 499   1        {
+ 500   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 10;
+ 501   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 11;
+ 502   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 12;
+ 503   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 13;
+ 504   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 14;
+ 505   2        }
+ 506   1        else if(win_str_data.language == 3)
+ 507   1        {
+ 508   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 15;
+ 509   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 16;
+ 510   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 17;
+ 511   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 18;
+ 512   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 19;
+ 513   2        }
+ 514   1        else if(win_str_data.language == 4)
+ 515   1        {
+ 516   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 20;
+ 517   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 21;
+ 518   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 22;
+ 519   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 23;
+ 520   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 24;
+ 521   2        }
+ 522   1        else if(win_str_data.language == 5)
+ 523   1        {
+ 524   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 25;
+ 525   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 26;
+ 526   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 27;
+ 527   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 28;
+ 528   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 29;
+ 529   2        }
+ 530   1        else if(win_str_data.language == 6)
+ 531   1        {
+ 532   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 30;
+ 533   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 31;
+ 534   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 32;
+ 535   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 33;
+ 536   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 34;
+ 537   2        }
+ 538   1        else if(win_str_data.language == 7)
+ 539   1        {
+ 540   2          if(str_sys.bowl_num == 0x00)  win_str_data.tank2_material = 35;
+ 541   2          if(str_sys.bowl_num == 0x01)  win_str_data.tank2_material = 36;
+ 542   2          if(str_sys.bowl_num == 0x02)  win_str_data.tank2_material = 37;
+ 543   2          if(str_sys.bowl_num == 0x03)  win_str_data.tank2_material = 38;
+ 544   2          if(str_sys.bowl_num == 0x04)  win_str_data.tank2_material = 39;
+ 545   2        }
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/16/2026 11:06:27 PAGE 10  
+
+ 546   1      }
+ 547          
+ 548          void Send_voltage_service(u16 send_speed)
+ 549          {
+ 550   1        u16 vol_temp;
+ 551   1        vol_temp = win_level_trans_volt(send_speed);
+ 552   1      
+ 553   1        if(vol_temp != str_sys.mc_para.set_vol)
+ 554   1        {
+ 555   2          str_sys.mc_para.set_vol = vol_temp;
+ 556   2          RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
+ 557   2        }
+ 558   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    939    ----
+   CODE SIZE        =   4431    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     38       6
+   XDATA SIZE       =     40       6
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----       2
    IDATA SIZE       =   ----    ----

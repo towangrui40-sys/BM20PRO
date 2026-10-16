@@ -236,7 +236,7 @@ typedef struct{
 	u16 passcode;
 	u16 product_tpage;
 	///////bg paras settings/////////
-	u16 lid_cmd;
+	u16 lid_cmd;  //0x00:空闲     0x11:请求开盖    0x01:开盖进行中     0x10:请求关盖
 	///////select bowl/////////	
 	u16 sel_bowll;
 	u16 state;
@@ -246,13 +246,7 @@ typedef struct{
 	u16 bowl_tick;
 	u16 nm_dir_flag;
 	u16 fsm_tick;
-	u16 tank1_install;
-	u16 tank2_install;
-	u16	tank1_material;
-	u16 tank2_material;
-	u16 fsm_state;    //0 ready 1 pause
 	u16 start_close;
-	u16 pc_run_state;
 	u16 input_disp1;
 	u16 input_disp2;
 	u16 input_disp3;

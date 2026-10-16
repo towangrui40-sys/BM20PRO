@@ -3,10 +3,10 @@
 
 
 /**************************************************
-´¥ÃþµØÖ·ÉèÖÃÔÚ#include "func_handler.h"
-ÏÔÊ¾±äÁ¿µØÖ·ÔÚ#include "start_win.h"
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½#include "func_handler.h"
+ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½#include "start_win.h"
 
-//µã»÷°´¼ü´¦Àí»Øµ÷º¯Êý
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
 void btn_click_callback(u16 addr,u16 val)
 
 **************************************************/
@@ -38,37 +38,28 @@ void Init_Rtu_RegHoldingBuf(SysDataDef* dat)
 
 	usRegHoldingBuf[ADDR_SET_CASE].dat = (u16 *)&dat->set_case;
 	usRegHoldingBuf[ADDR_SET_LOCK].dat = (u16 *)&dat->set_lock;
-	usRegHoldingBuf[ADDR_CASE_STATE].dat = (u16 *)&dat->case_state;  //¸Ç×Ó×´Ì¬
-	usRegHoldingBuf[ADDR_LOCK_STATE].dat = (u16 *)&dat->lock_state;  //Ëø×´Ì¬
+	usRegHoldingBuf[ADDR_CASE_STATE].dat = (u16 *)&dat->case_state;
+	usRegHoldingBuf[ADDR_LOCK_STATE].dat = (u16 *)&dat->lock_state;
 	
-	usRegHoldingBuf[ADDR_BOWL1_NUM].dat = (u16 *)&dat->bowl_num;
-	usRegHoldingBuf[ADDR_BOWL2_NUM].dat = (u16 *)&dat->bowl_test_flag;
-	usRegHoldingBuf[ADDR_MAGNET_NUM].dat = (u16 *)&dat->magnet_num;
+	usRegHoldingBuf[ADDR_LOCATION_TEST].dat = (u16 *)&dat->location_test;
+	usRegHoldingBuf[ADDR_INSTALL_TEST].dat = (u16 *)&dat->install_test;
 
-	usRegHoldingBuf[ADDR_TANK1_TEMP].dat = (u16 *)&dat->tank1_temp;
-	usRegHoldingBuf[ADDR_TANK1_PRE].dat = (u16 *)&dat->tank1_pre;
-	usRegHoldingBuf[ADDR_TANK2_TEMP].dat = (u16 *)&dat->tank2_temp;
-	usRegHoldingBuf[ADDR_TANK2_PRE].dat = (u16 *)&dat->tank2_pre;
-	
-	usRegHoldingBuf[ADDR_DOOR].dat = (u16 *)&dat->case_open;//	  PAin(0) 
-	usRegHoldingBuf[ADDR_LOCK].dat = (u16 *)&dat->case_close;//   PAin(1)		
-	usRegHoldingBuf[ADDR_OPEN].dat = (u16 *)&dat->tank_lock;   //°´Ñ¹ºóÉÏËø
 }
 
 void main(void)
 { 
-	sys_init();//ÏµÍ³³õÊ¼»¯
+	sys_init();//ÏµÍ³ï¿½ï¿½Ê¼ï¿½ï¿½
 	Init_Rtu_RegHoldingBuf(&str_sys);
 	rtu_data_init();
 	btn_init();        
-	T5L_HMIslvInit(); //³õÊ¼»¯Í¨Ñ¶²ÎÊý
+	T5L_HMIslvInit(); //ï¿½ï¿½Ê¼ï¿½ï¿½Í¨Ñ¶ï¿½ï¿½ï¿½ï¿½
   EA=1;
-	Task_Manage_List_Init( );  // ÊÂ¼þÈÎÎñº¯Êý³õÊ¼»¯
+	Task_Manage_List_Init( );  // ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
 	win_init();
 	while(1)
 	{
 		Execute_Task_List_RUN();
-		T5L_HMIslvSub(); //¹¦ÄÜ£ºÔÚÏß¸üÐÂ´¥ÃþÆÁ³ÌÐò
+		T5L_HMIslvSub(); //ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ß¸ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		
 	}
 }

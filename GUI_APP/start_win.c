@@ -13,7 +13,7 @@ code const char Dir_on[3] = {"ON"};
 code const char Dir_off[3] = {"OFF"};
 
 Product_TypeDef product_data[PRODUCT_TOTAL]={ 
-//id, product name,		level		total_time	 work_time	   pause_time	  voltage		  current		
+//id, product name,		level		total_time	 work_time	   pause_time	  voltage		  current
 { 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,     350,1450, 	    1000,15000,	},
 };
 
@@ -41,7 +41,7 @@ static void win_buzz_set_btn_hold_handler(u16 btn_val);
 static void win_fac_set_btn_click_handler(u16 btn_val);
 //function
 static void win_calc_function(void);
-static void win_load_setpara(u16 var_addr);
+static void win_load_setpara(void);
 
 void win_save_prog_paras(u16 offaddr,u8 *var_addr,u16 len);
 void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len);
@@ -80,6 +80,9 @@ void btn_click_callback(u16 addr,u16 val)
 		case BTN_MANUAL_PAGE_ADDR:				//manual page button 0x1101
 				win_manual_btn_click_handler(val);
 			break;
+		case BTN_SEL_BOWL_ADDR:
+				win_str_data.sel_bowll = val;
+			break;
 		case BTN_PARA_KEYPAD_ADDR:
 				win_para_keypad_btn_click_handler(val);
 			break;
@@ -108,10 +111,10 @@ void btn_hold_res_callback(u16 addr,u16 val)
 			win_prog_para_btn_hold_handler(val);
 			break;
 		case BTN_SET_LIGHT_ADDR:
-			win_light_set_btn_hold_handler(val);		
+			win_light_set_btn_hold_handler(val);
 			break;
 		case BTN_SET_SHAKE_ADDR:
-			win_shake_set_btn_hold_handler(val);		
+			win_shake_set_btn_hold_handler(val);
 			break;
 		case BTN_LANGUAGE_ADDR:
 			win_language_set_btn_hold_handler(val);
@@ -158,6 +161,18 @@ static void win_calc_function(void)
 	temp = win_str_data.k_factor*product_data[win_str_data.product_id].para1.min;
 	win_str_data.b_factor = product_data[win_str_data.product_id].vol_min-temp;
 }
+
+u16 win_level_trans_volt(u16 level)
+{
+	float xdata temp;
+	u16 vol;
+
+	temp = win_str_data.k_factor * level;
+	temp += win_str_data.b_factor;
+	vol = (u16)temp;
+
+	return vol;
+}
 //load bar display
 
 void win_change_page(u16 page)
@@ -176,8 +191,8 @@ void win_change_page(u16 page)
 				win_disp_pause_time(MAIN_TIMER,win_str_data.use_pause_time);
 				win_disp_dir(MAIN_TIMER, win_str_data.use_dir);
 			
-				sys_write_vp(ARTNUM_MAIN_PROG_NUM_ADDR,(u8*)&win_str_data.prog_grp,1);	
-				win_str_data.disp_count_time = ((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time;
+				sys_write_vp(ARTNUM_MAIN_PROG_NUM_ADDR,(u8*)&win_str_data.prog_grp,1);
+				win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time) * 60);
 				win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
 			}
 			break;
@@ -213,7 +228,7 @@ void win_change_page(u16 page)
 //---------------------------------------------------------------//
 //name: win_load_setpara
 //---------------------------------------------------------------//
-static void win_load_setpara(u16 var_addr)
+static void win_load_setpara(void)
 {
 	if(win_str_data.logo >0) win_str_data.logo = 4;
 	sys_write_vp(ANIMOTION_LOGO_ADDR,(u8*)&win_str_data.logo,2);	//no logo for oem
@@ -221,17 +236,17 @@ static void win_load_setpara(u16 var_addr)
 	if(win_str_data.light > 100) win_str_data.light = 100;
 	if(win_str_data.light < 10) win_str_data.light = 10;
 	sys_setdis_light(win_str_data.light);
-	sys_write_vp(BTN_SET_LIGHT_ADDR,(u8*)&win_str_data.light,1);	
+	sys_write_vp(BTN_SET_LIGHT_ADDR,(u8*)&win_str_data.light,1);
 	if(win_str_data.shake > 150) win_str_data.shake = 150;
 	if(win_str_data.shake < 10) win_str_data.shake = 10;
-	sys_write_vp(BTN_SET_SHAKE_ADDR,(u8*)&win_str_data.shake,1);	
+	sys_write_vp(BTN_SET_SHAKE_ADDR,(u8*)&win_str_data.shake,1);
 	if(win_str_data.alarm > 1) win_str_data.alarm = 1;
 	if(win_str_data.alarm < 0) win_str_data.alarm = 0;
-	sys_enable_speaker(1-win_str_data.alarm);		
+	sys_enable_speaker(1-win_str_data.alarm);
 	sys_write_vp(BTN_SET_BUZZ_ADDR,(u8*)&win_str_data.alarm,1);
 	
 	if(win_str_data.language >= 3) win_str_data.language = 0;
-	if(win_str_data.language <= 0) win_str_data.language = 0;	
+	if(win_str_data.language <= 0) win_str_data.language = 0;
 	sys_write_vp(BTN_LANGUAGE_ADDR,(u8*)&win_str_data.language,1);
 }
 
@@ -295,7 +310,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 
 			norflash_write(SYS_LAST_PROG_OFFSET,(u8*)&win_str_data.prog_grp,2);
 		
-			win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,5);
+			win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,6);
 		
 		
 			win_disp_level(MAIN_TIMER,win_str_data.use_level);
@@ -305,7 +320,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 			win_disp_dir(MAIN_TIMER, win_str_data.use_dir);
 			if(win_str_data.start == 0 && win_str_data.pause == 0) 
 			{
-				win_str_data.disp_count_time = ((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time;
+				win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time) * 60);
 				win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
 			}
 
@@ -347,12 +362,12 @@ static void win_main_btn_click_handler(u16 btn_val)
 			{
 				if(win_str_data.lid_cmd == 0x00)
 				{
-					win_str_data.lid_cmd = 0x11;
+					win_str_data.lid_cmd = 0x11;  //请求开盖
 				}
 				else if(win_str_data.lid_cmd == 0x01)
 				{
 					if(win_str_data.state == FSM_sel_bowlL)
-					win_str_data.lid_cmd = 0x10;
+					win_str_data.lid_cmd = 0x10;  //请求关盖
 				}
 			}
 			break;
@@ -421,7 +436,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 	{
 		if(win_str_data.set_level >= product_data[win_str_data.product_id].para1.max) win_str_data.set_level = product_data[win_str_data.product_id].para1.max;
 		else if(win_str_data.set_level < product_data[win_str_data.product_id].para1.min) win_str_data.set_level = product_data[win_str_data.product_id].para1.min;	
-		win_disp_level(SET_TIMER,win_str_data.set_level);					
+		win_disp_level(SET_TIMER,win_str_data.set_level);
 	}
 	else if(win_str_data.paras_sel == BTN_VAL_CYCLE)
 	{
@@ -435,11 +450,11 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 		else if(win_str_data.set_run_time < product_data[win_str_data.product_id].para3.min) win_str_data.set_run_time =product_data[win_str_data.product_id].para3.min;
 		win_disp_run_time(SET_TIMER,win_str_data.set_run_time);	
 	}
-	else if(win_str_data.paras_sel == BTN_VAL_SEL_PAUSE_TIME)	
+	else if(win_str_data.paras_sel == BTN_VAL_SEL_PAUSE_TIME)
 	{
 		if(win_str_data.set_pause_time >product_data[win_str_data.product_id].para4.max) win_str_data.set_pause_time =product_data[win_str_data.product_id].para4.max;
 		else if(win_str_data.set_pause_time < product_data[win_str_data.product_id].para4.min) win_str_data.set_pause_time =product_data[win_str_data.product_id].para4.min;
-		win_disp_pause_time(SET_TIMER,win_str_data.set_pause_time);								
+		win_disp_pause_time(SET_TIMER,win_str_data.set_pause_time);
 	}
 	switch(btn_val)
 	{
@@ -450,7 +465,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_str_data.input_disp4 = 0x00;
 				disp_input_icon();
 				para_keypad_first_digit = 1;
-				win_str_data.paras_sel = btn_val;	
+				win_str_data.paras_sel = btn_val;
 			break;
 		case BTN_VAL_SEL_RUN_TIME:
 				win_str_data.input_disp1 = 0x00;
@@ -463,7 +478,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_disp_run_time(SET_TIMER,win_str_data.set_run_time);
 
 				para_keypad_first_digit = 1;
-		  	    win_str_data.paras_sel = btn_val;	
+		  	    win_str_data.paras_sel = btn_val;
 			break;
 		case BTN_VAL_SEL_PAUSE_TIME:
 				win_str_data.input_disp1 = 0x00;
@@ -517,8 +532,8 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 			win_change_page(SET_CONFIRM_PAGE);
 			break;
 		case BTN_VAL_YES:
-			memcpy((u8 *)&win_str_data.use_level,(u8 *)&win_str_data.set_level,10);		  
-			win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,5);
+			memcpy((u8 *)&win_str_data.use_level,(u8 *)&win_str_data.set_level,10);
+			win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,6);
 			win_change_page(SET_PAGE);
 			break;
 		case BTN_VAL_NO:
@@ -579,7 +594,7 @@ static void win_prog_para_btn_hold_handler(u16 btn_val)
 			break;
 		case BTN_VAL_YES:  	 //pop-up page YES   Put Set -> Prog and save flash
 				memcpy((u8 *)&win_str_data.prog_level,(u8 *)&win_str_data.set_level,10);  					//Set value to prog value
-				win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,5);	//write norflash
+				win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,6);	//write norflash
 				win_change_page(PROGRAM_PAGE);		//change page
 			break;
 		case BTN_VAL_NO:
@@ -620,14 +635,14 @@ static void win_prog_num_sel_btn_click_handler(u16 btn_val)
 	switch(btn_val)
 	{
 		case BTN_VAL_ACC:
-				if(win_str_data.prog_grp < 20) win_str_data.prog_grp++;	
+				if(win_str_data.prog_grp < 20) win_str_data.prog_grp++;
 			break;
 		case BTN_VAL_DEC:
-				if(win_str_data.prog_grp > 1) win_str_data.prog_grp--;	
+				if(win_str_data.prog_grp > 1) win_str_data.prog_grp--;
 			break;
 		default:break;
 	}
-	sys_write_vp(ARTNUM_PROG_NUM_ADDR,(u8*)&win_str_data.prog_grp,1);	
+	sys_write_vp(ARTNUM_PROG_NUM_ADDR,(u8*)&win_str_data.prog_grp,1);
 	//read nor flash  fresh display
 	win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,6);
 
@@ -637,7 +652,7 @@ static void win_prog_num_sel_btn_click_handler(u16 btn_val)
 	win_disp_cycle(PROG_TIMER,win_str_data.prog_cycle);
 
 	temp = 0;
-	sys_write_vp(BTN_PROG_MODE_SET_ADDR,(u8*)&temp,1);	
+	sys_write_vp(BTN_PROG_MODE_SET_ADDR,(u8*)&temp,1);
 
 }
 
@@ -728,7 +743,7 @@ static void win_pass_keypad_btn_click_handler(u16 btn_val)
 		sys_write_vp(ARTNUM_UT_ADDR,(u8*)&win_str_data.used_time,2);
   	    norflash_write(RUNTIME_MIN_HADDR,(u8*)&win_str_data.used_time,2);
 		win_str_data.passcode = 0;
-		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);			
+		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
 	else if(btn_val < BTN_VAL_cancel)
 	{
@@ -739,24 +754,24 @@ static void win_pass_keypad_btn_click_handler(u16 btn_val)
 		if(temp>9999) temp =9999;
 		else if(temp <0) temp =0;
 		win_str_data.passcode = temp;
-		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);				
+		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
 	else
-	{			
+	{
 		temp= temp/10;
 		if(temp <0) temp=0;
 		win_str_data.passcode = temp;
-		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);			
+		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
 	if(temp == 1010)
 	{
 		win_str_data.passcode = 0;
-		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);	
+		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
 	else if(temp == 5973)
 	{
 		win_str_data.passcode = 0;
-		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);	
+		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
 }
 
@@ -788,7 +803,7 @@ static void win_fac_set_btn_click_handler(u16 btn_val)
 			win_str_data.logo = 4 - win_str_data.logo;
 			if(win_str_data.logo > 0) win_str_data.logo = 4;
 			sys_write_vp(ANIMOTION_LOGO_ADDR,(u8 *)&win_str_data.logo,2);	//no logo for oem	
-			norflash_write(SYS_LOGO_OFFSET,(u8 *)&win_str_data.logo,2);			
+			norflash_write(SYS_LOGO_OFFSET,(u8 *)&win_str_data.logo,2);
 			break;
 		default:
 			break;
@@ -826,7 +841,7 @@ void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len)
 	{
 		addr = CUSTOM_BASE_NORADDR + offaddr;
 	}
-	norflash_read(addr,var_addr,len);	
+	norflash_read(addr,var_addr,len);
 
 	p_val = (u16 xdata *)var_addr;
 
@@ -883,7 +898,7 @@ void win_disp_level(u16 ch,u16 val)
 	}
 	if(ch & PROG_TIMER)
 	{
-		sys_write_vp(ARTMUM_PROG_LEVEL_ADDR,(u8 *)&val,1);	
+		sys_write_vp(ARTMUM_PROG_LEVEL_ADDR,(u8 *)&val,1);
 	}
 }
 
@@ -913,7 +928,7 @@ void win_disp_cycle(u16 ch,u16 val)
 	}
 	if(ch & PROG_TIMER)
 	{
-		sys_write_vp(ARTNUM_PROG_CYCLE_ADDR,(u8 *)&l_dat,1);	
+		sys_write_vp(ARTNUM_PROG_CYCLE_ADDR,(u8 *)&l_dat,1);
 	}
 }
 
@@ -933,9 +948,9 @@ void win_disp_count_time(u16 ch,u32 val)
 	}
 	if(ch & MAIN_TIMER)
 	{
-		sys_write_vp(ARTNUM_MAIN_COUNT_TIMEH_ADDR,(u8 *)&h_dat,1);	
-		sys_write_vp(ARTNUM_MAIN_COUNT_TIMEM_ADDR,(u8 *)&m_dat,1);	
-		sys_write_vp(ARTNUM_MAIN_COUNT_TIMES_ADDR,(u8 *)&s_dat,1);	
+		sys_write_vp(ARTNUM_MAIN_COUNT_TIMEH_ADDR,(u8 *)&h_dat,1);
+		sys_write_vp(ARTNUM_MAIN_COUNT_TIMEM_ADDR,(u8 *)&m_dat,1);
+		sys_write_vp(ARTNUM_MAIN_COUNT_TIMES_ADDR,(u8 *)&s_dat,1);
 	}
 }
 
@@ -952,7 +967,7 @@ void win_disp_run_time(u16 ch,u16 val)
 	}
 	if(ch & PROG_TIMER)
 	{
-		sys_write_vp(ARTNUM_PROG_RUN_TIME_ADDR,(u8 *)&val,1);	
+		sys_write_vp(ARTNUM_PROG_RUN_TIME_ADDR,(u8 *)&val,1);
 	}
 }
 
@@ -968,7 +983,7 @@ void win_disp_pause_time(u16 ch,u16 val)
 	}
 	if(ch & PROG_TIMER)
 	{
-		sys_write_vp(ARTNUM_PROG_PAUSE_TIME_ADDR,(u8 *)&val,1);	
+		sys_write_vp(ARTNUM_PROG_PAUSE_TIME_ADDR,(u8 *)&val,1);
 	}
 }
 
@@ -1007,7 +1022,7 @@ u16 win_sec_timer_handle(u16* stage)
 		if(win_str_data.disp_run_time > 0)win_str_data.disp_run_time--;
 		if(win_str_data.disp_run_time == 0)
 		{
-			win_str_data.disp_run_time = win_str_data.use_run_time; 	
+			win_str_data.disp_run_time = win_str_data.use_run_time;
 			*stage = 1;	
 			ret= 1;// return1  pause
 		}
@@ -1018,9 +1033,9 @@ u16 win_sec_timer_handle(u16* stage)
 		if(win_str_data.disp_pause_time > 0)win_str_data.disp_pause_time--;
 		if(win_str_data.disp_pause_time == 0)
 		{
-			win_str_data.disp_pause_time = win_str_data.use_pause_time; 
+			win_str_data.disp_pause_time = win_str_data.use_pause_time;
 			if(win_str_data.disp_cycle > 0)
-				win_str_data.disp_cycle--;				
+				win_str_data.disp_cycle--;
 			*stage = 0;
 			ret= 2;  //return2 start
 		}
@@ -1050,10 +1065,10 @@ void win_fresh_window(SysDataDef *sys)
 	win_fresh_timer_block();
 	//fresh load bar
 
-	if(win_str_data.start == 0 && win_str_data.pause == 0) 
+	if(win_str_data.start == 0 && win_str_data.pause == 0)
 	{
 		tick_sec = 0;
-	}				
+	}
 }
 
 void win_fresh_model_icon(u16 mode)
@@ -1071,14 +1086,14 @@ void win_fresh_model_icon(u16 mode)
 		temp = 0;
 		sys_write_vp(ICON_TEST_ADDR,(u8*)&temp,1);
 		temp = 1;
-		sys_write_vp(ICON_PROG_ADDR,(u8*)&temp,1);		
+		sys_write_vp(ICON_PROG_ADDR,(u8*)&temp,1);
 	}
 }		
 
 void win_fresh_timer_block(void)
 {
 	static u16 timer_fresh_ratio;
-	if(timer_fresh_ratio >0) timer_fresh_ratio--;	
+	if(timer_fresh_ratio >0) timer_fresh_ratio--;
 	{
 		timer_fresh_ratio = 50;//20hz
 		
@@ -1170,7 +1185,7 @@ void win_init(void)
 	norflash_read(SYS_LOGO_OFFSET,(u8 *)&win_str_data.logo,8);
 	win_str_data.product_id = 0;
 //3.read & load system parametes settings
-	win_load_setpara();	
+	win_load_setpara();
 //3	service time
 	win_str_data.used_time = win_str_data.used_time_h;
 	win_str_data.used_time <<= 16;
@@ -1194,8 +1209,8 @@ void win_init(void)
 	memcpy((u8*)&win_str_data.use_level,(u8*)&win_str_data.prog_level,10);
 
 //10. calc level vs voltage function
-	win_calc_function();	
-	sys_delay_about_ms(6000);  
+	win_calc_function();
+	sys_delay_about_ms(6000);
 //11. jump work page	
 
 	win_change_page(WORK_PAGE);

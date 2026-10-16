@@ -130,17 +130,8 @@ typedef struct
 	int set_lock;
 	int case_state;
 	int lock_state;
-	int bowl_num;
-	int bowl_test_flag;
-  int magnet_num;
-  int tank1_temp;
-	int tank1_pre;
-	int tank2_temp;	
-	int tank2_pre;
-	
-	int case_open;
-	int case_close;
-	int tank_lock;
+	int location_test;
+	int install_test;
 }SysDataDef;
 
 //ϵͳ�ṹ��
@@ -148,40 +139,18 @@ extern SysDataDef str_sys;
 
 typedef enum
 {
-  FSM_INIT = 0, 
-	FSM_INIT1,
-	FSM_INIT_1, 
-	FSM_INIT_CLOSE_LID, 
-	FSM_INIT_2, 
-	FSM_INIT_3, 
-	FSM_INIT_4,
-	FSM_INIT_5,
-	FSM_INIT_LOCK_1,
-	FSM_INIT_LOCK_2,
-	FSM_MOUNT,
+  	FSM_INIT = 0, 
 	FSM_READY,	
 	FSM_START,
-	FSM_TEST_START,
-	FSM_TEST_RUN,
 	FSM_RUN,
-	FSM_CLOSE_LID1,
-	FSM_CLOSE_LID2,
-	FSM_CLOSE_LID3,
-  FSM_CLOSE_LID4,
-	FSM_OPEN_LID1,
-	FSM_OPEN_LID2,
-	FSM_OPEN_LID3,
-  FSM_OPEN_LID4,
-	FSM_LOCK_1,
-	FSM_LOCK_2,
-	FSM_LOCK_3,
-  FSM_LOCK_4,
 	FSM_PAUSE,
 	FSM_STOP,
-	FSM_sel_bowlL,  	
-	FSM_ERROR,           
-	FSM_CLOSE_LID_TEST,
-	FSM_CLOSE_LID_TEST_START,
+	FSM_SLOW_DOWN,
+	FSM_SEL_BOWL,  	      
+	FSM_CHECK_POSITION,  //检查转盘位置
+	FSM_CASE_LOCK,
+	FSM_CASE_UNLOCK,
+
 }FSM_StateType;
 
 typedef enum

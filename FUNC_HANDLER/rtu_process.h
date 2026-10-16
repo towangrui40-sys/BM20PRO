@@ -5,18 +5,18 @@
 //TRU CMD    //RTU◊¥Ã¨
 typedef enum
 {
-	RTU_IDlE = 0,        
-	RTU_START,        
-	RTU_STOP,              
-	RTU_ERROR,            
-	RTU_SET_VLOTAGE,  //…Ë÷√µÁ—π
-	RTU_RUN_FWD, //’˝◊™‘À––
-	RTU_RUN_REV, //∑¥◊™‘À––	
+	RTU_IDlE = 0,
+	RTU_START,
+	RTU_STOP,
+	RTU_ERROR,
+	RTU_SET_VLOTAGE,
+	RTU_RUN_FWD,
+	RTU_RUN_REV,
 //DC	
 	RTU_SET_LED,
 
-	RTU_CASE_ACTION,
-	RTU_LOCK_ACTION,
+	RTU_CASE_ACTION,  //ÁõñÂ≠ê
+	RTU_LOCK_ACTION,  //ÈîÅ
 	RTU_LOCK_STATE,
 	RTU_ACFAN_RUN,
 	RTU_ACFAN_STOP,
