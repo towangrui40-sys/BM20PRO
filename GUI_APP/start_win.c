@@ -365,8 +365,40 @@ static void win_main_btn_click_handler(u16 btn_val)
 
 static void win_manual_btn_click_handler(u16 btn_val)
 {
-	
+	#define  BTN_VAL_M_OPEN_LID     1
+	#define  BTN_VAL_M_CLOSE_LID    2
+	#define  BTN_VAL_M_RUN_POS      3
+	#define  BTN_VAL_M_RUN_TO_LOCK  4
+	#define  BTN_VAL_M_UNLOCK       5
+	#define  BTN_VAL_M_LOCK         6
+
+	switch(btn_val)
+	{
+		case BTN_VAL_M_OPEN_LID:    //开盖
+			RTU_Cmd_Pending(RTU_CASE_ACTION, UNLOCK);
+			break;
+		case BTN_VAL_M_CLOSE_LID:   //关盖
+			RTU_Cmd_Pending(RTU_CASE_ACTION, LOCK);
+			break;
+		case BTN_VAL_M_RUN_POS:     //运行位置
+			RTU_Cmd_Pending(RTU_LOCK_ACTION, LOCK_TO_RUN);
+			break;
+		case BTN_VAL_M_RUN_TO_LOCK: //运行位置到上锁
+			RTU_Cmd_Pending(RTU_LOCK_ACTION, RUN_TO_LOCK);
+			break;
+		case BTN_VAL_M_UNLOCK:      //开锁
+			RTU_Cmd_Pending(RTU_LOCK_ACTION, UNLOCK);
+			break;
+		case BTN_VAL_M_LOCK:        //上锁
+			RTU_Cmd_Pending(RTU_LOCK_ACTION, LOCK);
+			break;
+
+		default:
+			break;
+	}
 }
+
+
 #define  BTN_VAL_NO	   		0X1005
 #define  BTN_VAL_YES	   	0X1004
 #define  BTN_VAL_RETURN		0X1003

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/15/2026 17:47:18 PAGE 1   
+C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/16/2026 09:49:59 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MOTOR_CMD
@@ -62,7 +62,7 @@ line level    source
   51          //      break;
   52          //    case MC_WORK:
   53          //      rtu_protocol_format_rd(ADDR_MOTOR_GET_CTRLMODE,(ADDR_GET_ROLLER+1)-ADDR_MOTOR_GET_CTRLMODE);
-C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/15/2026 17:47:18 PAGE 2   
+C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/16/2026 09:49:59 PAGE 2   
 
   54          //      break;
   55          //    default:break;

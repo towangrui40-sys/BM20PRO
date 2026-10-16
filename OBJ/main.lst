@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              10/15/2026 17:47:12 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 09:49:55 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51   1        usRegHoldingBuf[ADDR_TANK2_PRE].dat = (u16 *)&dat->tank2_pre;
   52   1        
   53   1        usRegHoldingBuf[ADDR_DOOR].dat = (u16 *)&dat->case_open;//    PAin(0) 
-C51 COMPILER V9.60.7.0   MAIN                                                              10/15/2026 17:47:12 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 09:49:55 PAGE 2   
 
   54   1        usRegHoldingBuf[ADDR_LOCK].dat = (u16 *)&dat->case_close;//   PAin(1)   
   55   1        usRegHoldingBuf[ADDR_OPEN].dat = (u16 *)&dat->tank_lock;   //╟╢я╧╨СиокЬ

@@ -1,15 +1,15 @@
 //############################################################
 // FILE:  Task_manager_H
-// Created on: 2019Äê7ÔÂ8ÈÕ
+// Created on: 2019ï¿½ï¿½7ï¿½ï¿½8ï¿½ï¿½
 // Author: XY
 // summary: Header file  and definition
-//±¾³ÌÐòÖ»¹©Ñ§Ï°Ê¹ÓÃ£¬Î´¾­×÷ÕßÐí¿É£¬²»µÃÓÃÓÚÆäËüÈÎºÎÓÃÍ¾
-//°æÈ¨ËùÓÐ£¬µÁ°æ±Ø¾¿
-//STM32F4µç»ú¿ØÖÆ¿ª·¢°å
-//Ë¶Àú´ïµç×Ó  
-//ÍøÖ·: https://shuolidianzi.taobao.com
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Ñ§Ï°Ê¹ï¿½Ã£ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½Í¾
+//ï¿½ï¿½È¨ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½
+//STM32F4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½
+//Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  
+//ï¿½ï¿½Ö·: https://shuolidianzi.taobao.com
 //Author-QQ: 616264123
-//µç»ú¿ØÖÆQQÈº£º314306105
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½QQÈºï¿½ï¿½314306105
 //############################################################
 
 
@@ -17,7 +17,7 @@
 #define _Task_manager_H_
 #include "sys.h"
 
-//void (* data g_pTaskList[TASKLISTCNT])();							// º¯ÊýÖ¸Õë
+//void (* data g_pTaskList[TASKLISTCNT])();							// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 typedef  void ( * FTimer_P) ( void );
 
 typedef struct {
@@ -31,16 +31,16 @@ void Timer_Task_Count(void);
 void Execute_Task_List_RUN(void);
 void Task_Manage_List_Init(void);
 
-#define UNLOCK  1
-#define LOCK	  2	 
+#define UNLOCK          1
+#define LOCK	        2	 
 #define LOCK_TO_RUN     3
 #define RUN_TO_LOCK   	4
 
-#define OPEN  1
+#define OPEN    1
 #define CLOSE	2	 
 		 
-#define CLOSE_PLACE	0	 		 
-#define OPEN_PLACE  1
-#define MIDDLE_PLACE  2
+#define CLOSE_PLACE 	0	 		 
+#define OPEN_PLACE      1
+#define MIDDLE_PLACE    2
 	 
 #endif  //Task_manager_H
