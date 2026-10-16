@@ -14,10 +14,11 @@ code const char Dir_off[3] = {"OFF"};
 
 Product_TypeDef product_data[PRODUCT_TOTAL]={ 
 //id, product name,		level		total_time	 work_time	   pause_time	  voltage		  current		
-{ 0,	"BM20Pro",		100,800,		1,99,     60,5940,      60,5940,     350,1450, 	    1000,15000,	},
+{ 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,     350,1450, 	    1000,15000,	},
 };
 
 STR_WIN_TypeDef xdata win_str_data;
+static bit para_keypad_first_digit = 0;
 
 //man page button handler API
 static void win_main_btn_click_handler(u16 btn_val);
@@ -30,6 +31,12 @@ static void win_para_keypad_btn_click_handler(u16 btn_val);
 static void win_factory_keypad_btn_click_handler(u16 btn_val);
 static void win_pass_keypad_btn_click_handler(u16 btn_val);
 static void win_prog_num_sel_btn_click_handler(u16 btn_val);
+
+static void win_light_set_btn_hold_handler(u16 btn_val);
+static void win_shake_set_btn_hold_handler(u16 btn_val);
+static void win_language_set_btn_hold_handler(u16 btn_val);
+static void win_buzz_set_btn_hold_handler(u16 btn_val);
+
 //factory page button handler api
 static void win_fac_set_btn_click_handler(u16 btn_val);
 //function
@@ -99,6 +106,18 @@ void btn_hold_res_callback(u16 addr,u16 val)
 			break;
 		case BTN_PROG_MODE_SET_ADDR:
 			win_prog_para_btn_hold_handler(val);
+			break;
+		case BTN_SET_LIGHT_ADDR:
+			win_light_set_btn_hold_handler(val);		
+			break;
+		case BTN_SET_SHAKE_ADDR:
+			win_shake_set_btn_hold_handler(val);		
+			break;
+		case BTN_LANGUAGE_ADDR:
+			win_language_set_btn_hold_handler(val);
+			break;
+		case BTN_SET_BUZZ_ADDR:
+			win_buzz_set_btn_hold_handler(val);
 			break;
 		default:
 			break;
@@ -196,7 +215,24 @@ void win_change_page(u16 page)
 //---------------------------------------------------------------//
 static void win_load_setpara(u16 var_addr)
 {
+	if(win_str_data.logo >0) win_str_data.logo = 4;
+	sys_write_vp(ANIMOTION_LOGO_ADDR,(u8*)&win_str_data.logo,2);	//no logo for oem
 
+	if(win_str_data.light > 100) win_str_data.light = 100;
+	if(win_str_data.light < 10) win_str_data.light = 10;
+	sys_setdis_light(win_str_data.light);
+	sys_write_vp(BTN_SET_LIGHT_ADDR,(u8*)&win_str_data.light,1);	
+	if(win_str_data.shake > 150) win_str_data.shake = 150;
+	if(win_str_data.shake < 10) win_str_data.shake = 10;
+	sys_write_vp(BTN_SET_SHAKE_ADDR,(u8*)&win_str_data.shake,1);	
+	if(win_str_data.alarm > 1) win_str_data.alarm = 1;
+	if(win_str_data.alarm < 0) win_str_data.alarm = 0;
+	sys_enable_speaker(1-win_str_data.alarm);		
+	sys_write_vp(BTN_SET_BUZZ_ADDR,(u8*)&win_str_data.alarm,1);
+	
+	if(win_str_data.language >= 3) win_str_data.language = 0;
+	if(win_str_data.language <= 0) win_str_data.language = 0;	
+	sys_write_vp(BTN_LANGUAGE_ADDR,(u8*)&win_str_data.language,1);
 }
 
 static void win_main_btn_click_handler(u16 btn_val)
@@ -220,10 +256,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 	#define  BTN_VAL_MANUAL              0X0F
 	#define  BTN_VAL_RATIO_SET         	 0X10
 
-
 	#define  BTN_VAL_CASE   		     0X11
-	#define  BTN_VAL_TIME_UP     		 0X16
-	#define  BTN_VAL_START_CLOSE		 0X21
 
 	u16 xdata temp = 0;
 	switch(btn_val)
@@ -262,7 +295,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 
 			norflash_write(SYS_LAST_PROG_OFFSET,(u8*)&win_str_data.prog_grp,2);
 		
-			win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,6);
+			win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,5);
 		
 		
 			win_disp_level(MAIN_TIMER,win_str_data.use_level);
@@ -324,13 +357,6 @@ static void win_main_btn_click_handler(u16 btn_val)
 			}
 			break;
 			
-			
-		case BTN_VAL_TIME_UP:
-			win_change_page(WORK_CONFIRM_PAGE);
-			break;
-		case BTN_VAL_START_CLOSE:
-			 win_str_data.start_close = 1;
-			break;
 		default:
 			break;
 	}
@@ -391,6 +417,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_str_data.input_disp3 = 0x00;
 				win_str_data.input_disp4 = 0x00;
 				disp_input_icon();
+				para_keypad_first_digit = 1;
 				win_str_data.paras_sel = btn_val;	
 			break;
 		case BTN_VAL_SEL_RUN_TIME:
@@ -403,6 +430,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_str_data.set_run_time = 0;
 				win_disp_run_time(SET_TIMER,win_str_data.set_run_time);
 
+				para_keypad_first_digit = 1;
 		  	    win_str_data.paras_sel = btn_val;	
 			break;
 		case BTN_VAL_SEL_PAUSE_TIME:
@@ -415,6 +443,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_str_data.set_pause_time = 0;
 				win_disp_pause_time(SET_TIMER,win_str_data.set_pause_time);	
 		
+				para_keypad_first_digit = 1;
 				win_str_data.paras_sel = btn_val;
 			break;		
 		case BTN_VAL_CYCLE:
@@ -423,6 +452,7 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 				win_str_data.input_disp3 = 0x00;
 				win_str_data.input_disp4 = 0x01;
 				disp_input_icon();
+				para_keypad_first_digit = 1;
 				win_str_data.paras_sel = btn_val;
 			break;
 
@@ -456,11 +486,10 @@ static void win_test_para_btn_hold_handler(u16 btn_val)
 			break;
 		case BTN_VAL_YES:
 			memcpy((u8 *)&win_str_data.use_level,(u8 *)&win_str_data.set_level,10);		  
-			win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,6);
+			win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,5);
 			win_change_page(SET_PAGE);
 			break;
 		case BTN_VAL_NO:
-			if((win_str_data.pause == 1)||(win_str_data.start != 0))
 				win_change_page(SET_PAGE);
 			break;
 		case BTN_VAL_DIR:
@@ -513,12 +542,12 @@ static void win_prog_para_btn_hold_handler(u16 btn_val)
 				win_change_page(WORK_PAGE);
 			break;
 		case BTN_VAL_OVERSET:  //Jump to pop-up page
-								win_str_data.paras_sel = 0;
-				win_change_page(PASSWORD_CONFIRM_PAGE);	
+				win_str_data.paras_sel = 0;
+				win_change_page(PROGRAM_CONFIRM_PAGE);	
 			break;
 		case BTN_VAL_YES:  	 //pop-up page YES   Put Set -> Prog and save flash
 				memcpy((u8 *)&win_str_data.prog_level,(u8 *)&win_str_data.set_level,10);  					//Set value to prog value
-				win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,6);	//write norflash
+				win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,5);	//write norflash
 				win_change_page(PROGRAM_PAGE);		//change page
 			break;
 		case BTN_VAL_NO:
@@ -584,44 +613,77 @@ static void win_prog_num_sel_btn_click_handler(u16 btn_val)
 ?????????win_para_keypad_btn_click_handler
 ???????????????????????
 *********************************************************/
+#define  BTN_VAL_1		1
+#define  BTN_VAL_2		2
+#define  BTN_VAL_3	    3
+#define  BTN_VAL_4      4
+#define  BTN_VAL_5      5
+#define  BTN_VAL_6		6
+#define  BTN_VAL_7		7
+#define  BTN_VAL_8      8
+#define  BTN_VAL_9		9
+#define  BTN_VAL_0		10
+#define  BTN_VAL_cancel	11
+
+static u16 win_para_keypad_input(u16 old_val, u16 btn_val)
+{
+	u16 xdata val;
+
+	if(btn_val == BTN_VAL_cancel)
+	{
+		if(para_keypad_first_digit)
+		{
+			val = 0;
+		}
+		else
+		{
+			val = old_val / 10;
+		}
+	}
+	else if((btn_val >= BTN_VAL_1) && (btn_val <= BTN_VAL_0))
+	{
+		if(para_keypad_first_digit)
+		{
+			val = (btn_val == BTN_VAL_0) ? 0 : btn_val;
+		}
+		else
+		{
+			val = (old_val % 1000) * 10;
+			val += (btn_val == BTN_VAL_0) ? 0 : btn_val;
+		}
+	}
+	else
+	{
+		return old_val;
+	}
+
+	para_keypad_first_digit = 0;
+	return val;
+}
+
 static void win_para_keypad_btn_click_handler(u16 btn_val)
 {
-	#define  BTN_VAL_1		1
-	#define  BTN_VAL_2		2
-	#define  BTN_VAL_3	    3
-	#define  BTN_VAL_4      4
-	#define  BTN_VAL_5      5
-	#define  BTN_VAL_6		6
-	#define  BTN_VAL_7		7
-	#define  BTN_VAL_8      8
-	#define  BTN_VAL_9		9
-	#define  BTN_VAL_0		10	
-	#define  BTN_VAL_cancel	11	1
-	 
 	switch(win_str_data.paras_sel)
 	{
-/****************************SEL_LEVEL***********************************/		
 		case BTN_VAL_SEL_LEVEL:
-		
+			win_str_data.set_level = win_para_keypad_input(win_str_data.set_level, btn_val);
+			win_disp_level(SET_TIMER, win_str_data.set_level);
 			break;
-
 		case BTN_VAL_CYCLE:
-
+			win_str_data.set_cycle = win_para_keypad_input(win_str_data.set_cycle, btn_val);
+			win_disp_cycle(SET_TIMER, win_str_data.set_cycle);
 			break;
-	
 		case BTN_VAL_SEL_RUN_TIME:
-
-			
+			win_str_data.set_run_time = win_para_keypad_input(win_str_data.set_run_time, btn_val);
+			win_disp_run_time(SET_TIMER, win_str_data.set_run_time);
 			break;
-
 		case BTN_VAL_SEL_PAUSE_TIME:
-
+			win_str_data.set_pause_time = win_para_keypad_input(win_str_data.set_pause_time, btn_val);
+			win_disp_pause_time(SET_TIMER, win_str_data.set_pause_time);
 			break;
-
-
 		default:
 			break;
-	}	
+	}
 }
 
 static void win_pass_keypad_btn_click_handler(u16 btn_val)
@@ -682,11 +744,15 @@ static void win_set_para_btn_hold_handler(u16 btn_val)
 
 static void win_fac_set_btn_click_handler(u16 btn_val)
 {
-	 
+	#define  BTN_VAL_PASSCODE	    0X01
+	#define  BTN_VAL_LOGO	    	0X08
 	win_str_data.factory_sel = 0;
-	switch(btn_val)//???????0X1300
+	switch(btn_val)
 	{
-		case 0X08://logo
+		case BTN_VAL_PASSCODE://logo
+			win_change_page(PASSWORD_PAGE);
+			break;
+		case BTN_VAL_LOGO://logo
 			win_str_data.logo = 4 - win_str_data.logo;
 			if(win_str_data.logo > 0) win_str_data.logo = 4;
 			sys_write_vp(ANIMOTION_LOGO_ADDR,(u8 *)&win_str_data.logo,2);	//no logo for oem	
@@ -717,7 +783,9 @@ void win_save_prog_paras(u16 offaddr,u8 *var_addr,u16 len)
 void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len)
 {
 	u16 xdata addr;
-	u16 xdata i;	
+	u16 xdata i;
+	u16 xdata *p_val;
+
 	if(win_str_data.prog_grp > 0)
 	{
 		addr = PROG1_BASE_NORADDR + 0x10 * (win_str_data.prog_grp - 1) + offaddr;
@@ -727,35 +795,44 @@ void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len)
 		addr = CUSTOM_BASE_NORADDR + offaddr;
 	}
 	norflash_read(addr,var_addr,len);	
-	//fresh 
-	len =len/2;
+
+	p_val = (u16 xdata *)var_addr;
+
 	for(i = 0;i<len;i++)
 	{
 		addr = offaddr + i;
 		switch(addr)
 		{
 			case PROG_LEVEL_OFFSET:
-				if(win_str_data.prog_level > product_data[win_str_data.product_id].para1.max)	win_str_data.prog_level = product_data[win_str_data.product_id].para1.min;	
-				if(win_str_data.prog_level < product_data[win_str_data.product_id].para1.min)	win_str_data.prog_level = product_data[win_str_data.product_id].para1.min;	
-			break;
-			case PROG_TT_OFFSET:	
-				if(win_str_data.prog_cycle > product_data[win_str_data.product_id].para2.max) win_str_data.prog_cycle = product_data[win_str_data.product_id].para2.min;
-				if(win_str_data.prog_cycle < product_data[win_str_data.product_id].para2.min) win_str_data.prog_cycle = product_data[win_str_data.product_id].para2.min;				
-			break;
-			case PROG_WT_OFFSET:
-				if(win_str_data.prog_run_time > product_data[win_str_data.product_id].para3.max) win_str_data.prog_run_time = product_data[win_str_data.product_id].para3.min;
-				if(win_str_data.prog_run_time < product_data[win_str_data.product_id].para3.min) win_str_data.prog_run_time = product_data[win_str_data.product_id].para3.min;
-			break;
-			case PROG_PT_OFFSET:
-				if(win_str_data.prog_pause_time > product_data[win_str_data.product_id].para4.max) win_str_data.prog_pause_time = product_data[win_str_data.product_id].para4.min;	
-				if(win_str_data.prog_pause_time < product_data[win_str_data.product_id].para4.min) win_str_data.prog_pause_time = product_data[win_str_data.product_id].para4.min;
-			break;
+				if(p_val[i] > product_data[win_str_data.product_id].para1.max)
+					p_val[i] = product_data[win_str_data.product_id].para1.max;
+				else if(p_val[i] < product_data[win_str_data.product_id].para1.min)
+					p_val[i] = product_data[win_str_data.product_id].para1.min;
+				break;
+			case PROG_RUN_TIME_OFFSET:
+				if(p_val[i] > product_data[win_str_data.product_id].para3.max)
+					p_val[i] = product_data[win_str_data.product_id].para3.max;
+				else if(p_val[i] < product_data[win_str_data.product_id].para3.min)
+					p_val[i] = product_data[win_str_data.product_id].para3.min;
+				break;
+			case PROG_PAUSE_TIME_OFFSET:
+				if(p_val[i] > product_data[win_str_data.product_id].para4.max)
+					p_val[i] = product_data[win_str_data.product_id].para4.max;
+				else if(p_val[i] < product_data[win_str_data.product_id].para4.min)
+					p_val[i] = product_data[win_str_data.product_id].para4.min;
+				break;
+			case PROG_CYCLE_OFFSET:
+				if(p_val[i] > product_data[win_str_data.product_id].para2.max)
+					p_val[i] = product_data[win_str_data.product_id].para2.max;
+				else if(p_val[i] < product_data[win_str_data.product_id].para2.min)
+					p_val[i] = product_data[win_str_data.product_id].para2.min;
+				break;
 			case PROG_DIR_OFFSET:
-				if(win_str_data.prog_dir > 1) win_str_data.prog_dir = 1;	
-				if(win_str_data.prog_dir < 0) win_str_data.prog_dir = 0;
-			break;
-		
-			default:break;
+				if(p_val[i] > 1)
+					p_val[i] = 1;
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -986,6 +1063,61 @@ void win_fresh_timer_block(void)
 void Fresh_Service_Time(void)
 {
 
+}
+
+
+//-------------------------------------------------------------------
+//函数名: win_light_set_btn_hold_handler
+//功能:   背光亮度设置(长按增减调节)
+//参数:   btn_val - DGUS屏按钮返回值(亮度等级)
+//说明:   1. 将按钮值写入全局结构体light变量
+//       2. 调用sys_setdis_light()即时设置DGUS屏背光亮度
+//       3. 将新亮度值保存到NorFlash,上电时读取恢复
+//-------------------------------------------------------------------
+static void win_light_set_btn_hold_handler(u16 btn_val)
+{
+	win_str_data.light = btn_val;            // 1. 保存到全局运行变量
+	sys_setdis_light(win_str_data.light);    // 2. 实时设置DGUS屏背光(0~5级)
+	norflash_write(SYS_LIGHT_OFFSET,(u8 *)&win_str_data.light,2);  // 3. 写入NorFlash持久化存储
+}
+
+//-------------------------------------------------------------------
+//函数名: win_shake_set_btn_hold_handler
+//功能:   震动报警开关设置
+//参数:   btn_val - DGUS屏按钮返回值(0=关闭, 1=开启)
+//说明:   将震动报警开关状态保存到全局变量并写入NorFlash
+//-------------------------------------------------------------------
+static void win_shake_set_btn_hold_handler(u16 btn_val)
+{
+	win_str_data.shake = btn_val;            // 1. 保存震动开关状态(0关/1开)
+	norflash_write(SYS_SHAKE_OFFSET,(u8 *)&win_str_data.shake,2);  // 2. 写入NorFlash持久化存储
+}
+
+//-------------------------------------------------------------------
+//函数名: win_language_set_btn_hold_handler
+//功能:   系统语言设置
+//参数:   btn_val - DGUS屏按钮返回值(语言编号,如0=中文,1=英文)
+//说明:   将语言设置保存到全局变量并写入NorFlash,上电读取恢复
+//-------------------------------------------------------------------
+static void win_language_set_btn_hold_handler(u16 btn_val)
+{
+	win_str_data.language = btn_val;         // 1. 保存语言编号到全局变量
+	norflash_write(SYS_LANGUAGE_OFFSET,(u8 *)&win_str_data.language,2);  // 2. 写入NorFlash持久化存储
+}
+
+//-------------------------------------------------------------------
+//函数名: win_buzz_set_btn_hold_handler
+//功能:   蜂鸣器开关设置
+//参数:   btn_val - DGUS屏按钮返回值(0=关闭, 1=开启)
+//说明:   1. 保存开关状态到全局变量
+//       2. 调用sys_enable_speaker()即时控制DGUS蜂鸣器
+//       3. 写入NorFlash持久化存储
+//-------------------------------------------------------------------
+static void win_buzz_set_btn_hold_handler(u16 btn_val)
+{
+	win_str_data.alarm = btn_val;            // 1. 保存蜂鸣器开关状态(0关/1开)
+	sys_enable_speaker(1-win_str_data.alarm);// 2. 反相设置DGUS蜂鸣器(1=en, alarm=0时使能)
+	norflash_write(SYS_BUZZ_OFFSET,(u8 *)&win_str_data.alarm,2);  // 3. 写入NorFlash持久化存储
 }
 
 

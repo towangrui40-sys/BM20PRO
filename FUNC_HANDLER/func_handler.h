@@ -33,7 +33,7 @@
 #define HOLD_ACTIVE_ADDR		0x1150	//hold button active register default 1
 #define HOLD_PASSIVE_ADDR		0x1152	//hold button passive register default 0
 
-#define BTN_EVENT_NUM 		 12
+#define BTN_EVENT_NUM 		 14
 
 
 

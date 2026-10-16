@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////button paras config///////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
-/*********************��ά����********************/
 code const u16 btn_click_pararlist[BTN_EVENT_NUM][2]={   //BTN_EVENT_NUM   ��ť���� ����ʵ�ʸ���
 {BTN_MAIN_PAGE_ADDR,			BTN_TYPE_CLICK},//paras input 
 {BTN_MANUAL_PAGE_ADDR,			BTN_TYPE_CLICK},
@@ -14,6 +13,12 @@ code const u16 btn_click_pararlist[BTN_EVENT_NUM][2]={   //BTN_EVENT_NUM   ��
 {BTN_SEL_BOWL_ADDR,		    	BTN_TYPE_CLICK},
 {BTN_TEST_MODE_SET_ADDR,		BTN_TYPE_HOLD_RES},
 {BTN_PROG_MODE_SET_ADDR,		BTN_TYPE_HOLD_RES},
+{BTN_SET_LIGHT_ADDR,			BTN_TYPE_HOLD_RES},
+{BTN_SET_SHAKE_ADDR,			BTN_TYPE_HOLD_RES},
+{BTN_LANGUAGE_ADDR,			    BTN_TYPE_HOLD_RES},
+{BTN_SET_BUZZ_ADDR,			    BTN_TYPE_HOLD_RES},
+
+
 
 };
 //////////////////////////////////////////////////////////////////////////////////

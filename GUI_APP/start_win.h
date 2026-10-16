@@ -120,10 +120,10 @@
 #define PROG20_BASE_NORADDR		0x150
 // each addr include 2 byte
 #define PROG_LEVEL_OFFSET		0  //level
-#define PROG_TT_OFFSET 			1  //total_time
-#define PROG_WT_OFFSET			2  //work_time
-#define PROG_PT_OFFSET			3  //pause_time
-#define PROG_DIR_OFFSET			4  
+#define PROG_RUN_TIME_OFFSET	1  //run_time
+#define PROG_PAUSE_TIME_OFFSET	2  //pause_time
+#define PROG_CYCLE_OFFSET		3  //cycle
+#define PROG_DIR_OFFSET			4  //dir
 
 
 
