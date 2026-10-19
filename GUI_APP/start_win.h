@@ -150,7 +150,10 @@ typedef enum{
 	PROGRAM_PAGE,
 	PROGRAM_CONFIRM_PAGE,
 	SELECT_TANK_PAGE,
-	PLEASE_WAIT_PAGE,
+	POPUP_LOCK_RESET,        // 35 锁紧装置正在复位
+	POPUP_DETECT_TURN,       // 36 正在检测转盘位置
+	POPUP_PRESS_HANDLE,      // 37 请下压把手,锁紧研磨罐
+	POPUP_LOCKING,           // 38 正在锁紧研磨罐
 }Change_Page_Def;
 
 
@@ -280,4 +283,3 @@ void win_fresh_window(SysDataDef *sys);
 void Fresh_Service_Time(void);
 void disp_input_icon(void);
 #endif
-

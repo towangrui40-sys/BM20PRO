@@ -11,8 +11,12 @@
 #define TIMERPeriod_COUNT  250   //250ms
 
 void Send_voltage_service(u16 send_speed);
+void Send_voltage_service_spd(u16 spd);
 void tank1_material(void);
 void tank2_material(void);
+
+#define RED     0x01
+#define GREEN   0x00
 
 TaskTime xdata TasksPare[Task_Num];
 extern code const Product_TypeDef product_data[PRODUCT_TOTAL];
@@ -130,11 +134,121 @@ void RTU_send_Rece(void)
 void Run_FSM(void)
 {
 	u16 xdata temp;
+	static u16 xdata init_lock_done = 0;
+	static u16 xdata init_step = 0;
 	switch(win_str_data.state)
 	{
 		case FSM_INIT:
-			win_str_data.state = FSM_READY;
-			break;
+				switch(init_step)
+				{
+					case 0: //清空两个罐材质显示，进入延时
+						init_lock_done = 0;
+						win_str_data.fsm_tick = 8;
+						init_step = 1;
+						break;
+
+					case 1: //延时结束，判断是否在1/2号位且有罐压锁
+						if(win_str_data.fsm_tick == 0)
+						{
+							if((str_sys.location_test == 0x01 || str_sys.location_test == 0x02) && str_sys.tank_lock == 0)   //unlock
+							{
+								RTU_Cmd_Pending(RTU_SET_LED,RED);
+								win_change_page(POPUP_PRESS_HANDLE);   //请下压把手 完成开机复位页面。
+								init_step = 2;
+							}
+							else
+							{
+								RTU_Cmd_Pending(RTU_SET_LED,GREEN);
+								win_change_page(POPUP_LOCK_RESET);    //等待机器复位界面
+								init_step = 4;
+							}
+						}
+						break;
+
+					case 2: //压锁状态：先上锁
+						if(str_sys.tank_lock == 1)//下压把手 开始上锁
+						{
+							RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+							win_change_page(POPUP_LOCKING);
+							init_lock_done = 1;
+							init_step = 3;
+						}
+						break;
+
+					case 3: //等待锁到位；若仍压住则解锁重试，否则进入关盖流程
+						if(str_sys.lock_state == 1)
+						{
+							if(str_sys.tank_lock == 0)  //锁紧失败
+							{
+								RTU_Cmd_Pending(RTU_SET_LED,RED);
+								RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
+								win_change_page(SELECT_TANK_PAGE);
+								init_step = 2;
+							}
+							else
+							{
+								RTU_Cmd_Pending(RTU_SET_LED,GREEN);
+								win_change_page(POPUP_LOCK_RESET);
+								win_change_page(SELECT_TANK_PAGE);
+								init_step = 4;
+							}
+						}
+						break;
+
+					case 4: //盖子未关则发关盖命令
+						if(str_sys.case_state != 0)
+						{
+							RTU_Cmd_Pending(RTU_CASE_ACTION,LOCK);
+						}
+						init_step = 5;
+						break;
+
+					case 5: //等盖子关到位后启动电机转到2号位
+						if(str_sys.case_state == 0)
+						{
+							RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+							Send_voltage_service_spd(160);
+							win_str_data.fsm_tick = 4;
+							init_step = 6;
+						}
+						break;
+
+					case 6: //转到2号位后停电机并开盖，决定是否还需上锁
+						if(str_sys.location_test == 0x02 && win_str_data.fsm_tick == 0)
+						{
+							RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+							RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK);
+							init_step = init_lock_done ? 8 : 7;
+						}
+						break;
+
+					case 7: //补一次上锁
+						RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+						init_step = 8;
+						break;
+
+					case 8: //等锁到位后请求开盖
+						if(str_sys.lock_state == 1)
+						{
+							win_str_data.lid_cmd = 0x01;
+							init_step = 9;
+						}
+						break;
+
+					case 9: //盖子开到位后进入选罐界面
+						if(str_sys.case_state == 0x01)
+						{
+							win_change_page(SELECT_TANK_PAGE);
+							win_str_data.state = FSM_SEL_BOWL;
+							init_step = 0;
+						}
+						break;
+
+					default: //异常回到初始步骤
+						init_step = 0;
+						break;
+				}
+				break;
 		case FSM_READY:
 			win_str_data.disp_cycle = win_str_data.use_cycle;
 			win_str_data.disp_run_time = win_str_data.use_run_time;
@@ -155,7 +269,7 @@ void Run_FSM(void)
 
 			if(win_str_data.lid_cmd == 0x11)	//open lid
 			{
-				win_change_page(WORK_CHECK_POSITION_PAGE);   //切换检测转盘位置界面
+				win_change_page(PLEASE_WAIT_PAGE);   //切换检测转盘位置界面
 				Send_voltage_service(18);  //send motor speed
 				RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
 				win_str_data.lid_cmd = 0x01;
@@ -209,7 +323,7 @@ void Run_FSM(void)
 			if(win_str_data.lid_cmd == 0x10)   //close lid
 			{
 				win_str_data.lid_cmd = 0x00;
-				win_change_page(WORK_WAITE_CASE_PAGE);   //等待关盖界面
+				win_change_page(PLEASE_WAIT_PAGE);   //等待关盖界面
 				win_str_data.state = FSM_CASE_LOCK;
 			}
 			break;
@@ -246,7 +360,6 @@ void Run_FSM(void)
 			win_disp_level(MAIN_TIMER,str_sys.run_state);
 			if(str_sys.run_state == 0)
 			{
-				win_str_data.pc_run_state = 0;
 				win_change_page(WORK_PAGE);
 			}
 			break;
@@ -254,33 +367,17 @@ void Run_FSM(void)
 		case FSM_PAUSE:
 			if((win_str_data.start == 1) && (win_str_data.pause == 0))
 			{
-				if(win_str_data.tank1_install == 1 && win_str_data.tank2_install == 1)
-				{
-					Send_voltage_service(win_str_data.use_level);
+				Send_voltage_service(win_str_data.use_level);
 
-					if(win_str_data.nm_dir_flag == 0)
-					{
-						RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
-					}
-					if(win_str_data.nm_dir_flag == 1)
-					{
-						RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
-					}
-					win_str_data.pc_run_state = 1;
-					win_str_data.state = FSM_RUN;
-				}
-				else if(win_str_data.tank1_install == 2)
+				if(win_str_data.nm_dir_flag == 0)
 				{
-					win_str_data.start = 0;
-					win_str_data.pause = 1;
-					win_change_page(WORK_PAGE);
+					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
 				}
-				else if(win_str_data.tank2_install == 2)
+				else
 				{
-					win_str_data.start = 0;
-					win_str_data.pause = 1;
-					win_change_page(WORK_PAGE);
+					RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
 				}
+				win_str_data.state = FSM_RUN;
 			}
 
 			if((win_str_data.start == 0) && (win_str_data.pause == 0))
@@ -328,7 +425,7 @@ void HFPeriod_1msTask(void)
 		if(str_sys.location_test == 0x02 && win_str_data.lid_cmd == 0x01)  // turn to No.2 seat  open the lid
 		{
 			win_str_data.lid_cmd = 0x00;
-			win_change_page(WORK_WAITE_CASE_PAGE);   //切换等待开盖界面
+			win_change_page(PLEASE_WAIT_PAGE);   //切换等待开盖界面
 			RTU_Cmd_Pending(RTU_STOP,MC_STOP);
 			RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK); //send unlock lid
 			win_str_data.state = FSM_CHECK_POSITION;
@@ -364,5 +461,14 @@ void Send_voltage_service(u16 send_speed)
 	{
 		str_sys.mc_para.set_vol = vol_temp;
 		RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
+	}
+}
+
+void Send_voltage_service_spd(u16 spd)
+{
+	if(spd != str_sys.mc_para.set_vol)
+	{
+		str_sys.mc_para.set_vol = spd;
+		RTU_Cmd_Pending(RTU_SET_VLOTAGE,spd);
 	}
 }

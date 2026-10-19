@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 1   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE START_WIN
@@ -62,7 +62,7 @@ line level    source
   51          extern u16 const page_reg_ch[19]={
   52            { 1}, // MENU_PAGE = 0
   53            { 2}, // MANUAL_PAGE
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 2   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 2   
 
   54            { 3}, // LOGO_PAGE
   55            { 4}, // INFO_PAGE
@@ -126,7 +126,7 @@ line level    source
  113   2          case BTN_SET_LIGHT_ADDR:
  114   2            win_light_set_btn_hold_handler(val);
  115   2            break;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 3   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 3   
 
  116   2          case BTN_SET_SHAKE_ADDR:
  117   2            win_shake_set_btn_hold_handler(val);
@@ -190,7 +190,7 @@ line level    source
  175   1      }
  176          //load bar display
  177          
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 4   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 4   
 
  178          void win_change_page(u16 page)
  179          {
@@ -254,7 +254,7 @@ line level    source
  236   1        if(win_str_data.light > 100) win_str_data.light = 100;
  237   1        if(win_str_data.light < 10) win_str_data.light = 10;
  238   1        sys_setdis_light(win_str_data.light);
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 5   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 5   
 
  239   1        sys_write_vp(BTN_SET_LIGHT_ADDR,(u8*)&win_str_data.light,1);
  240   1        if(win_str_data.shake > 150) win_str_data.shake = 150;
@@ -318,7 +318,7 @@ line level    source
  298   2              win_str_data.pause = 0;
  299   2            break;
  300   2          case BTN_VAL_PAUSE:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 6   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 6   
 
  301   2              win_str_data.start = 0;
  302   2              win_str_data.pause = 1;
@@ -382,17 +382,17 @@ line level    source
  359   2      
  360   2          case BTN_VAL_CASE:
  361   2            if(win_str_data.start != 1)
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 7   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 7   
 
  362   2            {
  363   3              if(win_str_data.lid_cmd == 0x00)
  364   3              {
- 365   4                win_str_data.lid_cmd = 0x11;
+ 365   4                win_str_data.lid_cmd = 0x11;  //请求开盖
  366   4              }
  367   3              else if(win_str_data.lid_cmd == 0x01)
  368   3              {
- 369   4                if(win_str_data.state == FSM_sel_bowlL)
- 370   4                win_str_data.lid_cmd = 0x10;
+ 369   4                if(win_str_data.state == FSM_SEL_BOWL)
+ 370   4                win_str_data.lid_cmd = 0x10;  //请求关盖
  371   4              }
  372   3            }
  373   2            break;
@@ -446,7 +446,7 @@ line level    source
  421          #define  BTN_VAL_OVERSET    0X1001
  422          #define  BTN_VAL_TOSET      0X1000
  423          
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 8   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 8   
 
  424          #define  BTN_VAL_DIR          0X05
  425          #define  BTN_VAL_CYCLE        0X04
@@ -510,7 +510,7 @@ line level    source
  475   2              disp_input_icon();
  476   2      
  477   2              win_str_data.set_run_time = 0;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 9   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 9   
 
  478   2              win_disp_run_time(SET_TIMER,win_str_data.set_run_time);
  479   2      
@@ -574,7 +574,7 @@ line level    source
  537   2            win_change_page(SET_PAGE);
  538   2            break;
  539   2          case BTN_VAL_NO:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 10  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 10  
 
  540   2              win_change_page(SET_PAGE);
  541   2            break;
@@ -638,7 +638,7 @@ line level    source
  598   2              win_change_page(PROGRAM_PAGE);    //change page
  599   2            break;
  600   2          case BTN_VAL_NO:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 11  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 11  
 
  601   2              win_change_page(PROGRAM_PAGE);  
  602   2            break;
@@ -702,7 +702,7 @@ line level    source
  660          ?????????win_para_keypad_btn_click_handler
  661          ???????????????????????
  662          *********************************************************/
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 12  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 12  
 
  663          #define  BTN_VAL_1    1
  664          #define  BTN_VAL_2    2
@@ -766,7 +766,7 @@ line level    source
  722   2            break;
  723   2          case BTN_VAL_SEL_RUN_TIME:
  724   2            win_str_data.set_run_time = win_para_keypad_input(win_str_data.set_run_time, btn_val);
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 13  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 13  
 
  725   2            win_disp_run_time(SET_TIMER, win_str_data.set_run_time);
  726   2            break;
@@ -830,7 +830,7 @@ line level    source
  784   1        sys_enable_speaker(1 - win_str_data.alarm);
  785   1      
  786   1        win_str_data.light = btn_val>>8&0xff;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 14  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 14  
 
  787   1        sys_setdis_light(win_str_data.light);
  788   1      
@@ -894,7 +894,7 @@ line level    source
  846   1        p_val = (u16 xdata *)var_addr;
  847   1      
  848   1        for(i = 0;i<len;i++)
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 15  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 15  
 
  849   1        {
  850   2          addr = offaddr + i;
@@ -958,7 +958,7 @@ line level    source
  908   1        u16 xdata l_dat;
  909   1      
  910   1        if(ch & MAIN_TIMER)  //主页面
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 16  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 16  
 
  911   1        {
  912   2          h_dat = win_str_data.use_cycle - val+1; //运行次数从1开始
@@ -1022,7 +1022,7 @@ line level    source
  970   2          sys_write_vp(ARTNUM_PROG_RUN_TIME_ADDR,(u8 *)&val,1);
  971   2        }
  972   1      }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 17  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 17  
 
  973          
  974          void win_disp_pause_time(u16 ch,u16 val)
@@ -1086,7 +1086,7 @@ line level    source
 1032   2          win_str_data.start = 2;
 1033   2          if(win_str_data.disp_pause_time > 0)win_str_data.disp_pause_time--;
 1034   2          if(win_str_data.disp_pause_time == 0)
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 18  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 18  
 
 1035   2          {
 1036   3            win_str_data.disp_pause_time = win_str_data.use_pause_time;
@@ -1150,7 +1150,7 @@ line level    source
 1093          void win_fresh_timer_block(void)
 1094          {
 1095   1        static u16 timer_fresh_ratio;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 19  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 19  
 
 1096   1        if(timer_fresh_ratio >0) timer_fresh_ratio--;
 1097   1        {
@@ -1214,7 +1214,7 @@ line level    source
 1155          //-------------------------------------------------------------------
 1156          //函数名: win_buzz_set_btn_hold_handler
 1157          //功能:   蜂鸣器开关设置
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 20  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 20  
 
 1158          //参数:   btn_val - DGUS屏按钮返回值(0=关闭, 1=开启)
 1159          //说明:   1. 保存开关状态到全局变量
@@ -1278,13 +1278,13 @@ line level    source
 1216   1        win_change_page(WORK_PAGE);
 1217   1      }
 
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 11:06:30 PAGE 21  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/16/2026 16:12:01 PAGE 21  
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =   9255    ----
    CONSTANT SIZE    =     17    ----
-   XDATA SIZE       =    224     150
+   XDATA SIZE       =    212     150
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

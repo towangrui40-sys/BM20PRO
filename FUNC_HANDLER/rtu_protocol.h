@@ -9,33 +9,28 @@
 enum RTU_MOTOR_ADDR
 {
 /////////////motor work parameters////////
-	ADDR_MOTOR_GET_FWD=0,
-	ADDR_MOTOR_GET_REV,
-	ADDR_MOTOR_GET_RESET,
-	ADDR_MOTOR_GET_FAULT,
-//////////////motor control paras
-	ADDR_MOTOR_SET_RUN,
-	ADDR_MOTOR_SET_VOL,
-///////////////////////////////////////	
-	ADDR_GET_MEMSX,
+	ADDR_GET_MEMSX=0,
 	ADDR_GET_MEMSY,
 	ADDR_GET_MEMSZ,
+///////////////////////////////////////	
+	ADDR_SET_MOTOR,
+	ADDR_SET_SPEED,
+	ADDR_READ_SPEED,
+	ADDR_MOTOR_STATE,
+	ADDR_MOTOR_CURRENT,
 ///////////////////////////////////////		
-	ADDR_RUN_STATE,
-	ADDR_CUR,
-
 	ADDR_SET_LED,
 	
 	ADDR_SET_AC1,
 	ADDR_SET_AC2,
 	ADDR_SET_AC3,
-	
+
 	ADDR_SET_CASE,
 	ADDR_SET_LOCK,
 	ADDR_CASE_STATE,
 	ADDR_LOCK_STATE,
 	ADDR_LOCATION_TEST,
-	ADDR_INSTALL_TEST,
+	ADDR_TANK_LOCK,
 	
 	ADDR_HREG_TOTAL,
 	RTU_MEM_BASE= 0x1000,

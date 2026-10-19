@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 11:06:26 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 16:11:57 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -14,10 +14,10 @@ line level    source
    3          
    4          
    5          /**************************************************
-   6          ´¥ÃþµØÖ·ÉèÖÃÔÚ#include "func_handler.h"
-   7          ÏÔÊ¾±äÁ¿µØÖ·ÔÚ#include "start_win.h"
+   6          ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½#include "func_handler.h"
+   7          ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½#include "start_win.h"
    8          
-   9          //µã»÷°´¼ü´¦Àí»Øµ÷º¯Êý
+   9          //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
   10          void btn_click_callback(u16 addr,u16 val)
   11          
   12          **************************************************/
@@ -49,42 +49,42 @@ line level    source
   38   1      
   39   1        usRegHoldingBuf[ADDR_SET_CASE].dat = (u16 *)&dat->set_case;
   40   1        usRegHoldingBuf[ADDR_SET_LOCK].dat = (u16 *)&dat->set_lock;
-  41   1        usRegHoldingBuf[ADDR_CASE_STATE].dat = (u16 *)&dat->case_state;  //¸Ç×Ó×´Ì¬
-  42   1        usRegHoldingBuf[ADDR_LOCK_STATE].dat = (u16 *)&dat->lock_state;  //Ëø×´Ì¬
+  41   1        usRegHoldingBuf[ADDR_CASE_STATE].dat = (u16 *)&dat->case_state;
+  42   1        usRegHoldingBuf[ADDR_LOCK_STATE].dat = (u16 *)&dat->lock_state;
   43   1        
-  44   1        usRegHoldingBuf[ADDR_BOWL1_NUM].dat = (u16 *)&dat->bowl_num;
-  45   1        usRegHoldingBuf[ADDR_BOWL2_NUM].dat = (u16 *)&dat->bowl_test_flag;
-  46   1        usRegHoldingBuf[ADDR_MAGNET_NUM].dat = (u16 *)&dat->magnet_num;
-  47   1      
-  48   1        usRegHoldingBuf[ADDR_TANK1_TEMP].dat = (u16 *)&dat->tank1_temp;
-  49   1        usRegHoldingBuf[ADDR_TANK1_PRE].dat = (u16 *)&dat->tank1_pre;
-  50   1        usRegHoldingBuf[ADDR_TANK2_TEMP].dat = (u16 *)&dat->tank2_temp;
-  51   1        usRegHoldingBuf[ADDR_TANK2_PRE].dat = (u16 *)&dat->tank2_pre;
-  52   1        
-  53   1        usRegHoldingBuf[ADDR_DOOR].dat = (u16 *)&dat->case_open;//    PAin(0) 
-C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 11:06:26 PAGE 2   
+  44   1        usRegHoldingBuf[ADDR_LOCATION_TEST].dat = (u16 *)&dat->location_test;
+  45   1        usRegHoldingBuf[ADDR_INSTALL_TEST].dat = (u16 *)&dat->install_test;
+  46   1      
+  47   1      }
+  48          
+  49          void main(void)
+  50          { 
+  51   1        sys_init();//ÏµÍ³ï¿½ï¿½Ê¼ï¿½ï¿½
+  52   1        Init_Rtu_RegHoldingBuf(&str_sys);
+  53   1        rtu_data_init();
+C51 COMPILER V9.60.7.0   MAIN                                                              10/16/2026 16:11:57 PAGE 2   
 
-  54   1        usRegHoldingBuf[ADDR_LOCK].dat = (u16 *)&dat->case_close;//   PAin(1)   
-  55   1        usRegHoldingBuf[ADDR_OPEN].dat = (u16 *)&dat->tank_lock;   //°´Ñ¹ºóÉÏËø
-  56   1      }
-  57          
-  58          void main(void)
-  59          { 
-  60   1        sys_init();//ÏµÍ³³õÊ¼»¯
-  61   1        Init_Rtu_RegHoldingBuf(&str_sys);
-  62   1        rtu_data_init();
-  63   1        btn_init();        
-  64   1        T5L_HMIslvInit(); //³õÊ¼»¯Í¨Ñ¶²ÎÊý
-  65   1        EA=1;
-  66   1        Task_Manage_List_Init( );  // ÊÂ¼þÈÎÎñº¯Êý³õÊ¼»¯
-  67   1        win_init();
-  68   1        while(1)
-  69   1        {
-  70   2          Execute_Task_List_RUN();
-  71   2          T5L_HMIslvSub(); //¹¦ÄÜ£ºÔÚÏß¸üÐÂ´¥ÃþÆÁ³ÌÐò
-  72   2          
-  73   2        }
-  74   1      }
+  54   1        btn_init();        
+  55   1        T5L_HMIslvInit(); //ï¿½ï¿½Ê¼ï¿½ï¿½Í¨Ñ¶ï¿½ï¿½ï¿½ï¿½
+  56   1        EA=1;
+  57   1        Task_Manage_List_Init( );  // ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
+  58   1        win_init();
+  59   1        while(1)
+  60   1        {
+  61   2          Execute_Task_List_RUN();
+  62   2          T5L_HMIslvSub(); //ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ß¸ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  63   2          
+  64   2        }
+  65   1      }
+  66          
+  67          
+  68          
+  69          
+  70          
+  71          
+  72          
+  73          
+  74          
   75          
   76          
   77          
@@ -95,21 +95,12 @@ line level    source
   82          
   83          
   84          
-  85          
-  86          
-  87          
-  88          
-  89          
-  90          
-  91          
-  92          
-  93          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    589    ----
+   CODE SIZE        =    437    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     60       3
+   XDATA SIZE       =     44       3
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

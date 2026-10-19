@@ -98,40 +98,28 @@ typedef struct{
 	u16 end_flag;
 }SHAPE_DATA_VER_LINE;
 
-typedef struct {
-	int fwd;
-	int rev;
-	int reset;
-	int fault;
-	int set_run;
-	int set_vol;
-}MOTOR_Control_Order;
 
 typedef struct
 {
-    signed short x;
-    signed short y;
-    signed short z;
-    
-}MEMS_TYPEDEF;
-
-
-typedef struct
-{
-	MOTOR_Control_Order mc_para;
-	MEMS_TYPEDEF str_mems;
+	int x;
+	int y;
+	int z;
+	int set_motor;
+	int set_speed;	
+	int read_speed;		
+	int motor_state;	
+	int motor_current;	
 	int run_state;
-	int current;
 	int set_led;
 	int set_ac1;
 	int set_ac2;
 	int set_ac3;
 	int set_case;
 	int set_lock;
-	int case_state;
-	int lock_state;
-	int location_test;
-	int install_test;
+	int case_state;     //盖子状态
+	int lock_state;     //研磨罐锁状态 
+	int location_test;  //研磨罐位置检测
+	int tank_lock;      //检测把手状态传感器
 }SysDataDef;
 
 //ϵͳ�ṹ��
@@ -161,7 +149,6 @@ typedef enum
 }FSM_ErrorType;
 
 
-//��������
 void sys_init(void);
 void sys_delay_about_ms(u16 ms);
 void sys_delay_about_us(u8 us);

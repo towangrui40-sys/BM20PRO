@@ -48,7 +48,7 @@ void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len);
 void win_fresh_model_icon(u16 mode);
 
 
-extern u16 const page_reg_ch[19]={
+extern u16 const page_reg_ch[22]={
 	{ 1}, // MENU_PAGE = 0
 	{ 2}, // MANUAL_PAGE
 	{ 3}, // LOGO_PAGE
@@ -66,7 +66,10 @@ extern u16 const page_reg_ch[19]={
 	{28}, // PROGRAM_PAGE
 	{29}, // PROGRAM_CONFIRM_PAGE
 	{31}, // SELECT_TANK_PAGE
-	{35}, // PLEASE_WAIT_PAGE
+	{35}, // POPUP_LOCK_RESET       锁紧装置正在复位
+	{36}, // POPUP_DETECT_TURN      正在检测转盘位置
+	{37}, // POPUP_PRESS_HANDLE     请下压把手,锁紧研磨罐
+	{38}, // POPUP_LOCKING          正在锁紧研磨罐
 };
 
 	
@@ -366,7 +369,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 				}
 				else if(win_str_data.lid_cmd == 0x01)
 				{
-					if(win_str_data.state == FSM_sel_bowlL)
+					if(win_str_data.state == FSM_SEL_BOWL)
 					win_str_data.lid_cmd = 0x10;  //请求关盖
 				}
 			}
