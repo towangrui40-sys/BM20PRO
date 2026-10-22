@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 1   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TASK_MANAGER
@@ -62,7 +62,7 @@ line level    source
   49   1        static u16 xdata temp = 0;
   50   1        static u16 xdata tick = 0;
   51   1        static u16 xdata spk = 0;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 2   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 2   
 
   52   1        static u16 xdata spk_tick = 0;
   53   1        static u16 xdata Once_flag = 0;
@@ -126,7 +126,7 @@ line level    source
  111   1      
  112   1        if(win_str_data.state == FSM_READY)
  113   1        {
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 3   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 3   
 
  114   2          win_str_data.fan_tick++;
  115   2          if(win_str_data.fan_tick >= 1200)
@@ -190,7 +190,7 @@ line level    source
  173   2            {
  174   3              start_pos2_detect();
  175   3            }
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 4   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 4   
 
  176   2            else if(str_sys.location_test != 0x01 && str_sys.location_test != 0x02)
  177   2            {
@@ -240,7 +240,7 @@ line level    source
  221   2          case FSM_INIT_LOCK_CHECK:
  222   2            if(str_sys.location_test == 0x01 || str_sys.location_test == 0x02)
  223   2            {
- 224   3              if(str_sys.lock_state == 1 && str_sys.tank_lock == 0)
+ 224   3              if(str_sys.tank_lock == 0)
  225   3              {
  226   4                start_init_reclose();
  227   4              }
@@ -254,7 +254,7 @@ line level    source
  235   4                win_change_page(POPUP_PRESS_HANDLE);          //请下压把手
  236   4                win_str_data.state = FSM_INIT_WAIT_LOCK;
  237   4              }
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 5   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 5   
 
  238   3            }
  239   2            else if(str_sys.case_state == OPEN_PLACE)   //开盖但不在1/2号位
@@ -318,7 +318,7 @@ line level    source
  297   3              win_str_data.lid_cmd = 0x00;
  298   3              win_change_page(POPUP_CASE);
  299   3              RTU_Cmd_Pending(RTU_CASE_ACTION,CLOSE);
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 6   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 6   
 
  300   3              win_str_data.state = FSM_CASE_CLOSE;
  301   3            }
@@ -382,7 +382,7 @@ line level    source
  359   4                RTU_Cmd_Pending(RTU_SET_LED,RED);
  360   4                RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
  361   4                win_str_data.state = FSM_LOCK_1;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 7   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 7   
 
  362   4              }
  363   3              else
@@ -446,7 +446,7 @@ line level    source
  421   3            win_str_data.lid_cmd = 0x00;
  422   3            win_change_page(POPUP_CASE);   //等待盖子到位界面
  423   3            RTU_Cmd_Pending(RTU_STOP,MC_STOP);
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:32:59 PAGE 8   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:38:17 PAGE 8   
 
  424   3            RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK); //send unlock lid
  425   3            win_str_data.state = FSM_POSITION_CHECK;
@@ -487,7 +487,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2386    ----
+   CODE SIZE        =   2374    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     38       6
    PDATA SIZE       =   ----    ----

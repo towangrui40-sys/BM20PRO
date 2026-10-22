@@ -221,7 +221,7 @@ void Run_FSM(void)
 		case FSM_INIT_LOCK_CHECK:
 			if(str_sys.location_test == 0x01 || str_sys.location_test == 0x02)
 			{
-				if(str_sys.lock_state == 1 && str_sys.tank_lock == 0)
+				if(str_sys.tank_lock == 0)
 				{
 					start_init_reclose();
 				}
