@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2026 11:28:34 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2026 18:53:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -20,7 +20,6 @@ line level    source
    9          void Init_Rtu_RegHoldingBuf(SysDataDef* dat)
   10          {
   11   1        usRegHoldingBuf[ADDR_GET_MEMSX].dat = (u16 *)&dat->str_mems_x;
-*** ERROR C204 IN LINE 11 OF main.c: 'str_mems_x': undefined member
   12   1        usRegHoldingBuf[ADDR_GET_MEMSY].dat = (u16 *)&dat->str_mems_y;
   13   1        usRegHoldingBuf[ADDR_GET_MEMSZ].dat = (u16 *)&dat->str_mems_z;
   14   1        
@@ -62,9 +61,9 @@ line level    source
   50   2          T5L_HMIslvSub();
   51   2          
   52   2        }
-C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2026 11:28:34 PAGE 2   
-
   53   1      }
+C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2026 18:53:24 PAGE 2   
+
   54          
   55          
   56          
@@ -85,4 +84,20 @@ line level    source
   71          
   72          
 
-C51 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    380    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     40       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

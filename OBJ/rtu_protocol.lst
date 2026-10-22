@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 11:28:46 PAGE 1   
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 18:53:34 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTU_PROTOCOL
@@ -62,7 +62,7 @@ line level    source
   51   1        {
   52   2          package[num++] = RTU_FUNC_CODE_WR;
   53   2          package[num++] = (addr_temp>>8)&0xff;
-C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 11:28:46 PAGE 2   
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 18:53:34 PAGE 2   
 
   54   2          package[num++] = addr_temp&0xff;
   55   2        }
@@ -126,7 +126,7 @@ line level    source
  113   1      }
  114          u8 rtu_response_handler(void)
  115          {
-C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 11:28:46 PAGE 3   
+C51 COMPILER V9.60.7.0   RTU_PROTOCOL                                                      10/22/2026 18:53:34 PAGE 3   
 
  116   1        unsigned char idata* response = 0;  
  117   1        switch(rtu_structure.event)

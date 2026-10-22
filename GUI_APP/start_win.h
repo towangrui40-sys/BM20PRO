@@ -154,6 +154,7 @@ typedef enum{
 	POPUP_DETECT_TURN,       // 36 正在检测转盘位置
 	POPUP_PRESS_HANDLE,      // 37 请下压把手,锁紧研磨罐
 	POPUP_LOCKING,           // 38 正在锁紧研磨罐
+	POPUP_CASE,              // 39 等待盖子到位
 }Change_Page_Def;
 
 
@@ -254,6 +255,7 @@ typedef struct{
 	u16 input_disp2;
 	u16 input_disp3;
 	u16 input_disp4;	
+	u16 tank_lock_action;   //1:请求开锁
 }STR_WIN_TypeDef;
 
 

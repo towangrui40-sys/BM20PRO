@@ -86,7 +86,6 @@ typedef struct{
 	u16 end_flag;
 }SHAPE_DATA_AREA_COPY;
 
-//Ƶ��,��ֱ��
 typedef struct{
 	u16 vp;
 	u16 shape_type;
@@ -101,9 +100,9 @@ typedef struct{
 
 typedef struct
 {
-	int x;
-	int y;
-	int z;
+	int str_mems_x;
+	int str_mems_y;
+	int str_mems_z;
 	int set_motor;
 	int set_speed;	
 	int read_speed;		
@@ -122,23 +121,35 @@ typedef struct
 	int tank_lock;      //检测把手状态传感器
 }SysDataDef;
 
-//ϵͳ�ṹ��
 extern SysDataDef str_sys;
 
 typedef enum
 {
-  	FSM_INIT = 0, 
-	FSM_READY,	
-	FSM_START,
-	FSM_RUN,
-	FSM_PAUSE,
-	FSM_STOP,
-	FSM_SLOW_DOWN,
-	FSM_SEL_BOWL,  	      
-	FSM_CHECK_POSITION,  //检查转盘位置
-	FSM_CASE_LOCK,
-	FSM_CASE_UNLOCK,
-
+  	FSM_POWER_ON = 0,        // 开机第一步：判断盖子状态
+	FSM_READY,               // 就绪/待机
+	FSM_START,               // 启动电机
+	FSM_RUN,                 // 正常运行
+	FSM_PAUSE,               // 暂停
+	FSM_STOP,                // 停止
+	FSM_STOPPING,            // 等待电机减速到零
+	FSM_TANK_SELECT,         // 选择研磨罐/等待转盘选位
+	FSM_TANK_MOVE_POS1,      // 研磨罐转盘前往1号位
+	FSM_TANK_MOVE_POS2,      // 研磨罐转盘前往2号位
+	FSM_POSITION_CHECK,      // 检测转盘位置
+	FSM_CASE_CLOSE,          // 关盖流程
+	FSM_INIT_LEAVE_POS2,     // 初始化：先转离2号位
+	FSM_INIT_WAIT_POS2,      // 初始化：等待重新到达2号位
+	FSM_INIT_LOCK_CHECK,     // 盖子未关：进入门锁判断流程
+	FSM_POWER_ON_DELAY,      // 开机等待控制器状态稳定
+	FSM_INIT_WAIT_LOCK,      // 初始化：等待研磨罐锁到位
+	FSM_INIT_RECLOSE,        // 初始化：盖子开着且不在罐位，先关盖再重开
+	FSM_LOCK_RESET,          // 开盖后复位锁紧装置
+	FSM_LOCK_RELOCK,         // 复位锁紧装置：重新上锁并等待到位
+	FSM_LOCK_1,              // 选罐开锁：等待解锁到位
+	FSM_LOCK_2,              // 选罐开锁：等待把手下压
+	FSM_LOCK_3,              // 选罐开锁：上锁并检查是否锁好
+	FSM_INIT_LOCKING,        // 初始化上锁：等待锁到位
+	FSM_INIT_UNLOCKING,      // 初始化上锁失败：自动解锁后等待重新按压
 }FSM_StateType;
 
 typedef enum

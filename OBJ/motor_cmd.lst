@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/22/2026 11:28:42 PAGE 1   
+C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/22/2026 18:53:30 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MOTOR_CMD
@@ -14,75 +14,21 @@ line level    source
    3          #include "motor_cmd.h"
    4          
    5          #include "main.h"
-   6          
-   7          ST_MOTOR_PARAS_DEF st_motor_paras;
-   8          
-   9          void motor_set_station(u8 station)
-  10          {
-  11   1          st_motor_paras.station = station;
-  12   1      }
-  13          /*--------------------------------/
-  14          命令内容含义：
-  15          0001：正转运行（无参数）
-  16          0002：反转运行（无参数）
-  17          0003：减速停机
-  18          0004：自由停机
-  19          0005：正转点动起动
-  20          0006：正转点动停机
-  21          0007：保留
-  22          0008：运行（无方向）
-  23          0009：故障复位
-  24          000A: 反转点动起动
-  25          000B: 反转点动停机
-  26          000C：休眠唤醒
-  27          /--------------------------------*/
-  28          
-  29          // rtu_protocol_format_wr     wr写
-  30          void motor_set_run(u16 paras)
-  31          {
-  32   1        rtu_protocol_format_wr(ADDR_MOTOR_SET_RUN,1,&paras);
-*** ERROR C202 IN LINE 32 OF ..\FUNC_HANDLER\motor_cmd.c: 'ADDR_MOTOR_SET_RUN': undefined identifier
-  33   1      }
-  34          
-  35          //void motor_set_rpm(u16 rpm)     //电机写转速
-  36          //{
-  37          //  rtu_protocol_format_wr(ADDR_MOTOR_SET_RPM,1,&rpm);
-  38          //}
-  39          //void motor_set_door(u16 enable)   //
-  40          //{
-  41          //  rtu_protocol_format_wr(ADDR_SET_DOOR,1,&enable);
-  42          //}
-  43          
-  44          
-  45          //void motor_get_runstate(MC_GetState state)
-  46          //{
-  47          //  switch(state)
-  48          //  {
-  49          //    case MC_IDLE:
-  50          //      rtu_protocol_format_rd(ADDR_GET_ROTORID,(ADDR_GET_ROLLER+1)-ADDR_GET_ROTORID);
-  51          //      break;
-  52          //    case MC_WORK:
-C51 COMPILER V9.60.7.0   MOTOR_CMD                                                         10/22/2026 11:28:42 PAGE 2   
 
-  53          //      rtu_protocol_format_rd(ADDR_MOTOR_GET_CTRLMODE,(ADDR_GET_ROLLER+1)-ADDR_MOTOR_GET_CTRLMODE);
-  54          //      break;
-  55          //    default:break;
-  56          //  }
-  57          
-  58          //}
-  59          
-  60          //void motor_get_rpm(void)  //rd 读
-  61          //{
-  62          //  rtu_protocol_format_rd(ADDR_MOTOR_GET_RPM,1);
-  63          //}
-  64          //void motor_get_door_lock(void)
-  65          //{
-  66          //  rtu_protocol_format_rd(ADDR_GET_DOORLOCK,1);
-  67          //}
-  68          //void motor_get_roller(void)
-  69          //{
-  70          //  rtu_protocol_format_rd(ADDR_GET_ROLLER,1);
-  71          //}
-  72          
 
-C51 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

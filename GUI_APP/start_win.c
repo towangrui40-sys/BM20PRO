@@ -70,6 +70,7 @@ extern u16 const page_reg_ch[22]={
 	{36}, // POPUP_DETECT_TURN      正在检测转盘位置
 	{37}, // POPUP_PRESS_HANDLE     请下压把手,锁紧研磨罐
 	{38}, // POPUP_LOCKING          正在锁紧研磨罐
+	{39}, // POPUP_CASE             等待盖子到位
 };
 
 	
@@ -165,7 +166,7 @@ static void win_calc_function(void)
 	win_str_data.b_factor = product_data[win_str_data.product_id].vol_min-temp;
 }
 
-u16 win_level_trans_volt(u16 level)       //�����ѹֵ
+u16 win_level_trans_volt(u16 level)
 {
 	float temp;
 	temp = level;
@@ -302,6 +303,9 @@ static void win_main_btn_click_handler(u16 btn_val)
 				win_str_data.start = 0;
 				win_str_data.pause = 1;
 			break;
+		case BTN_VAL_UNLOCK:
+				win_str_data.tank_lock_action = 1;   //请求开锁
+			break;
 		case BTN_VAL_TEST:
 			if((win_str_data.pause == 1)||(win_str_data.start != 0)) break;
 		
@@ -367,7 +371,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 				}
 				else if(win_str_data.lid_cmd == 0x01)
 				{
-					if(win_str_data.state == FSM_SEL_BOWL)
+					if(win_str_data.state == FSM_TANK_SELECT)
 					win_str_data.lid_cmd = 0x10;  //请求关盖
 				}
 			}

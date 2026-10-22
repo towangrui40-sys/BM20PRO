@@ -21,10 +21,10 @@ void RTU_Send_Cmd(u8 index)
 		case RTU_STOP://str_sys.mc_para.set_run = 0x04;			
 		case RTU_RUN_FWD://str_sys.mc_para.set_run = 0x01;
 		case RTU_RUN_REV://	str_sys.mc_para.set_run = 0x02;
-			rtu_protocol_format_wr(ADDR_MOTOR_SET_RUN,1,(u16 *)&rtu_structure.cmd_data[index]);
+			rtu_protocol_format_wr(ADDR_SET_MOTOR,1,(u16 *)&rtu_structure.cmd_data[index]);
 			break;
-		case RTU_SET_VLOTAGE:
-			rtu_protocol_format_wr(ADDR_MOTOR_SET_VOL,1,(u16 *)&rtu_structure.cmd_data[index]);
+		case RTU_SET_SPEED:
+			rtu_protocol_format_wr(ADDR_SET_SPEED,1,(u16 *)&rtu_structure.cmd_data[index]);
 			break;
 		case RTU_CASE_ACTION:
 			rtu_protocol_format_wr(ADDR_SET_CASE,1,(u16 *)&rtu_structure.cmd_data[index]);
@@ -40,7 +40,7 @@ void RTU_Send_Cmd(u8 index)
 			rtu_protocol_format_wr(ADDR_SET_AC1,1,(u16 *)&rtu_structure.cmd_data[index]);
 			break;		
 		case RTU_IDlE:
-			rtu_protocol_format_rd(ADDR_MOTOR_GET_FWD,ADDR_HREG_TOTAL);
+			rtu_protocol_format_rd(ADDR_GET_MEMSX,ADDR_HREG_TOTAL);
 			break;
 		
 		default:
