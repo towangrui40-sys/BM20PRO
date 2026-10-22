@@ -13,8 +13,8 @@ code const char Dir_on[3] = {"ON"};
 code const char Dir_off[3] = {"OFF"};
 
 Product_TypeDef product_data[PRODUCT_TOTAL]={ 
-//id, product name,		level		total_time	 work_time	   pause_time	  voltage		  current
-{ 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,     350,1450, 	    1000,15000,	},
+//id, product name,		 level		total_time	 work_time	   pause_time	  voltage		  current
+{ 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,        0,2542, 	    1000,15000,	},
 };
 
 STR_WIN_TypeDef xdata win_str_data;
@@ -158,23 +158,21 @@ static void win_calc_function(void)
 	float xdata temp,temp1;
 	
 	temp = product_data[win_str_data.product_id].vol_max-product_data[win_str_data.product_id].vol_min;
-	temp1 = product_data[win_str_data.product_id].para1.max-product_data[win_str_data.product_id].para1.min;
+	temp1 = product_data[win_str_data.product_id].para1.max - 1;
 	win_str_data.k_factor = temp/temp1;
 	
-	temp = win_str_data.k_factor*product_data[win_str_data.product_id].para1.min;
+	temp = win_str_data.k_factor * 1;
 	win_str_data.b_factor = product_data[win_str_data.product_id].vol_min-temp;
 }
 
-u16 win_level_trans_volt(u16 level)
+u16 win_level_trans_volt(u16 level)       //�����ѹֵ
 {
-	float xdata temp;
-	u16 vol;
+	float temp;
+	temp = level;
+	
+	temp = (float)(win_str_data.k_factor * temp)+win_str_data.b_factor;	
 
-	temp = win_str_data.k_factor * level;
-	temp += win_str_data.b_factor;
-	vol = (u16)temp;
-
-	return vol;
+	return (u16)temp;
 }
 //load bar display
 

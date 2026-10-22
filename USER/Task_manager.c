@@ -11,7 +11,6 @@
 #define TIMERPeriod_COUNT  250   //250ms
 
 void Send_voltage_service(u16 send_speed);
-void Send_voltage_service_spd(u16 spd);
 void tank1_material(void);
 void tank2_material(void);
 
@@ -207,7 +206,7 @@ void Run_FSM(void)
 						if(str_sys.case_state == 0)
 						{
 							RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
-							Send_voltage_service_spd(160);
+
 							win_str_data.fsm_tick = 4;
 							init_step = 6;
 						}
@@ -461,14 +460,5 @@ void Send_voltage_service(u16 send_speed)
 	{
 		str_sys.mc_para.set_vol = vol_temp;
 		RTU_Cmd_Pending(RTU_SET_VLOTAGE,vol_temp);
-	}
-}
-
-void Send_voltage_service_spd(u16 spd)
-{
-	if(spd != str_sys.mc_para.set_vol)
-	{
-		str_sys.mc_para.set_vol = spd;
-		RTU_Cmd_Pending(RTU_SET_VLOTAGE,spd);
 	}
 }
