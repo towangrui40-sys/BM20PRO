@@ -139,7 +139,6 @@ typedef enum
 	FSM_CASE_CLOSE,          // 关盖流程
 	FSM_INIT_LEAVE_POS2,     // 初始化：先转离2号位
 	FSM_INIT_WAIT_POS2,      // 初始化：等待重新到达2号位
-	FSM_INIT_LOCK_CHECK,     // 盖子未关：进入门锁判断流程
 	FSM_POWER_ON_DELAY,      // 开机等待控制器状态稳定
 	FSM_INIT_WAIT_LOCK,      // 初始化：等待研磨罐锁到位
 	FSM_INIT_RECLOSE,        // 初始化：盖子开着且不在罐位，先关盖再重开
@@ -150,6 +149,7 @@ typedef enum
 	FSM_LOCK_3,              // 选罐开锁：上锁并检查是否锁好
 	FSM_INIT_LOCKING,        // 初始化上锁：等待锁到位
 	FSM_INIT_UNLOCKING,      // 初始化上锁失败：自动解锁后等待重新按压
+	FSM_INIT_LOCK_CHECK,     // 初始化：检查转盘位置和研磨罐锁状态
 }FSM_StateType;
 
 typedef enum

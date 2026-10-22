@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 18:53:35 PAGE 1   
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 19:30:14 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTU_API
@@ -62,7 +62,7 @@ line level    source
   51   1          unsigned short sum = 0, i;
   52   1          for (i=0; i<12; i++) {
   53   2              sum += rx[i];
-C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 18:53:35 PAGE 2   
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 19:30:14 PAGE 2   
 
   54   2          }
   55   1          return sum;
@@ -126,7 +126,7 @@ line level    source
  113          //unsigned char* API_BuildPackage( API_StructDef *api)
  114          //{
  115          //  static unsigned char local_addr = 0;
-C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 18:53:35 PAGE 3   
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 19:30:14 PAGE 3   
 
  116          //    #ifdef  ROLE_485_SLAVE  
  117          //    local_addr = ReadAddress();
@@ -190,7 +190,7 @@ line level    source
  175   2          if(rx_data == 0x03)
  176   2          {
  177   3            mPkg[mPkg_length_counter++] = rx_data;
-C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 18:53:35 PAGE 4   
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 19:30:14 PAGE 4   
 
  178   3            rx_state++; 
  179   3                    
@@ -254,7 +254,7 @@ line level    source
  237   3      
  238   3              rx_callback(mPkg , mPkg_length_counter-2);  //save data,back callback function  
  239   3              rx_state = 0;
-C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 18:53:35 PAGE 5   
+C51 COMPILER V9.60.7.0   RTU_API                                                           10/22/2026 19:30:14 PAGE 5   
 
  240   3              mPkg_length_counter = 0;
  241   3              memset(mPkg, 0, 256);  

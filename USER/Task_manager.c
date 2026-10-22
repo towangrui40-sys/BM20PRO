@@ -145,6 +145,8 @@ static void start_init_reclose(void)
 static void start_init_unlock(void)
 {
 	RTU_Cmd_Pending(RTU_SET_LED,RED);
+	RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
+	win_change_page(POPUP_LOCK_RESET);
 	win_str_data.state = FSM_INIT_UNLOCKING;
 }
 
@@ -176,14 +178,9 @@ void Run_FSM(void)
 				//不在1/2号位时直接关盖，关盖后再找位置
 				start_init_reclose();
 			}
-			else if(str_sys.tank_lock == 0)
+			else                                        //在1/2号位，统一判断锁状态
 			{
-				RTU_Cmd_Pending(RTU_SET_LED,GREEN);
-				start_init_reclose();
-			}
-			else if(str_sys.tank_lock == 1)
-			{
-				start_init_unlock();
+				win_str_data.state = FSM_INIT_LOCK_CHECK;
 			}
 			break;
 
@@ -265,10 +262,6 @@ void Run_FSM(void)
 				{
 					start_init_unlock();
 				}
-			}
-			else if(str_sys.tank_lock == 1)               //把手已释放
-			{
-				win_str_data.state = FSM_INIT_WAIT_LOCK;
 			}
 			break;
 
