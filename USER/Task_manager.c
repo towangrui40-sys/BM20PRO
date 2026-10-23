@@ -219,26 +219,19 @@ void Run_FSM(void)
 			break;
 
 		case FSM_INIT_LOCK_CHECK:
-			if(str_sys.location_test == 0x01 || str_sys.location_test == 0x02)
-			{
-				if(str_sys.tank_lock == 0)
-				{
-					start_init_reclose();
-				}
-				else if(str_sys.lock_state == 1 && str_sys.tank_lock == 1)
-				{
-					start_init_unlock();
-				}
-				else
-				{
-					RTU_Cmd_Pending(RTU_SET_LED,RED);
-					win_change_page(POPUP_PRESS_HANDLE);          //请下压把手
-					win_str_data.state = FSM_INIT_WAIT_LOCK;
-				}
-			}
-			else if(str_sys.case_state == OPEN_PLACE)   //开盖但不在1/2号位
+			if(str_sys.tank_lock == 0)
 			{
 				start_init_reclose();
+			}
+			else if(str_sys.lock_state == 1 && str_sys.tank_lock == 1)
+			{
+				start_init_unlock();
+			}
+			else
+			{
+				RTU_Cmd_Pending(RTU_SET_LED,RED);
+				win_change_page(POPUP_PRESS_HANDLE);          //请下压把手
+				win_str_data.state = FSM_INIT_WAIT_LOCK;
 			}
 			break;
 
@@ -287,17 +280,22 @@ void Run_FSM(void)
 
 			if(win_str_data.lid_cmd == 0x10)            //请求关盖，优先处理
 			{
-				if(str_sys.set_motor != MC_STOP)
-				{
-					str_sys.set_motor = MC_STOP;
-					RTU_Cmd_Pending(RTU_STOP,MC_STOP);
-				}
 				win_str_data.sel_bowll = 0;
 				win_str_data.bowl_tick = 0;
+
+				if(str_sys.location_test == 0x01)       //在1号位，反转离开
+				{
+					Send_voltage_service(200);
+					RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+				}
+				else if(str_sys.location_test == 0x02)  //在2号位，正转离开
+				{
+					Send_voltage_service(200);
+					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+				}
+
 				win_str_data.lid_cmd = 0x00;
-				win_change_page(POPUP_CASE);
-				RTU_Cmd_Pending(RTU_CASE_ACTION,CLOSE);
-				win_str_data.state = FSM_CASE_CLOSE;
+				win_str_data.state = FSM_CLOSE_LID1;
 			}
 			else if(win_str_data.tank_lock_action == 1) //选择页开锁
 			{

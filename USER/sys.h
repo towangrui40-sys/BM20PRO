@@ -150,6 +150,10 @@ typedef enum
 	FSM_INIT_LOCKING,        // 初始化上锁：等待锁到位
 	FSM_INIT_UNLOCKING,      // 初始化上锁失败：自动解锁后等待重新按压
 	FSM_INIT_LOCK_CHECK,     // 初始化：检查转盘位置和研磨罐锁状态
+	FSM_CLOSE_LID1,          // 关盖：转离1/2号位
+	FSM_CLOSE_LID2,          // 关盖：等待锁转到运行位
+	FSM_CLOSE_LID3,          // 关盖：发送关盖命令
+	FSM_CLOSE_LID4,          // 关盖：等待盖子关到位
 }FSM_StateType;
 
 typedef enum
