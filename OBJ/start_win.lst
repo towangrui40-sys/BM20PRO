@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 1   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE START_WIN
@@ -62,7 +62,7 @@ line level    source
   51          extern u16 const page_reg_ch[22]={
   52            { 1}, // MENU_PAGE = 0
   53            { 2}, // MANUAL_PAGE
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 2   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 2   
 
   54            { 3}, // LOGO_PAGE
   55            { 4}, // INFO_PAGE
@@ -126,7 +126,7 @@ line level    source
  113   2            break;
  114   2          case BTN_PROG_MODE_SET_ADDR:
  115   2            win_prog_para_btn_hold_handler(val);
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 3   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 3   
 
  116   2            break;
  117   2          case BTN_SET_LIGHT_ADDR:
@@ -190,7 +190,7 @@ line level    source
  175   1      
  176   1        return (u16)temp;
  177   1      }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 4   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 4   
 
  178          //load bar display
  179          
@@ -254,7 +254,7 @@ line level    source
  236   1        sys_write_vp(ANIMOTION_LOGO_ADDR,(u8*)&win_str_data.logo,2);  //no logo for oem
  237   1      
  238   1        if(win_str_data.light > 100) win_str_data.light = 100;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 5   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 5   
 
  239   1        if(win_str_data.light < 10) win_str_data.light = 10;
  240   1        sys_setdis_light(win_str_data.light);
@@ -318,7 +318,7 @@ line level    source
  298   2          case BTN_VAL_STOP:
  299   2              win_str_data.start = 0;
  300   2              win_str_data.pause = 0;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 6   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 6   
 
  301   2            break;
  302   2          case BTN_VAL_PAUSE:
@@ -382,7 +382,7 @@ line level    source
  359   2            break;
  360   2      
  361   2          case BTN_VAL_RATIO_SET:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 7   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 7   
 
  362   2            //
  363   2            break;
@@ -446,7 +446,7 @@ line level    source
  421          
  422          #define  BTN_VAL_NO       0X1005
  423          #define  BTN_VAL_YES      0X1004
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 8   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 8   
 
  424          #define  BTN_VAL_RETURN   0X1003
  425          #define  BTN_VAL_UPSET    0X1002
@@ -510,7 +510,7 @@ line level    source
  475   2          case BTN_VAL_SEL_RUN_TIME:
  476   2              win_str_data.input_disp1 = 0x00;
  477   2              win_str_data.input_disp2 = 0x01;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 9   
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 9   
 
  478   2              win_str_data.input_disp3 = 0x00;
  479   2              win_str_data.input_disp4 = 0x00;
@@ -574,7 +574,7 @@ line level    source
  537   2            win_change_page(SET_CONFIRM_PAGE);
  538   2            break;
  539   2          case BTN_VAL_YES:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 10  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 10  
 
  540   2            memcpy((u8 *)&win_str_data.use_level,(u8 *)&win_str_data.set_level,10);
  541   2            win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.use_level,6);
@@ -638,7 +638,7 @@ line level    source
  599   2            break;
  600   2          case BTN_VAL_YES:    //pop-up page YES   Put Set -> Prog and save flash
  601   2              memcpy((u8 *)&win_str_data.prog_level,(u8 *)&win_str_data.set_level,10);            //Set value to prog val
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 11  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 11  
 
              -ue
  602   2              win_save_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,6); //write norflash
@@ -702,7 +702,7 @@ line level    source
  660   1        sys_write_vp(BTN_PROG_MODE_SET_ADDR,(u8*)&temp,1);
  661   1      
  662   1      }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 12  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 12  
 
  663          
  664          /********************************************************
@@ -766,7 +766,7 @@ line level    source
  722   2            win_disp_level(SET_TIMER, win_str_data.set_level);
  723   2            break;
  724   2          case BTN_VAL_CYCLE:
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 13  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 13  
 
  725   2            win_str_data.set_cycle = win_para_keypad_input(win_str_data.set_cycle, btn_val);
  726   2            win_disp_cycle(SET_TIMER, win_str_data.set_cycle);
@@ -830,7 +830,7 @@ line level    source
  784          static void win_set_para_btn_hold_handler(u16 btn_val)
  785          {
  786   1        win_str_data.language = btn_val&0x0001;
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 14  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 14  
 
  787   1      
  788   1        win_str_data.alarm = btn_val&0x0002;
@@ -894,7 +894,7 @@ line level    source
  846   1        {
  847   2          addr = CUSTOM_BASE_NORADDR + offaddr;
  848   2        }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 15  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 15  
 
  849   1        norflash_read(addr,var_addr,len);
  850   1      
@@ -958,7 +958,7 @@ line level    source
  908   1      }
  909          
  910          void win_disp_cycle(u16 ch,u16 val) 
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 16  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 16  
 
  911          {
  912   1        u16 xdata h_dat;
@@ -1022,7 +1022,7 @@ line level    source
  970   1        {
  971   2          sys_write_vp(ARTNUM_SET_RUN_TIME_ADDR,(u8 *)&val,1);
  972   2        }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 17  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 17  
 
  973   1        if(ch & PROG_TIMER)
  974   1        {
@@ -1086,7 +1086,7 @@ line level    source
 1032   3            ret= 1;// return1  pause
 1033   3          }
 1034   2        }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 18  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 18  
 
 1035   1        else if(*stage == 1)//pause stage
 1036   1        {
@@ -1150,7 +1150,7 @@ line level    source
 1093   2          temp = 1;
 1094   2          sys_write_vp(ICON_PROG_ADDR,(u8*)&temp,1);
 1095   2        }
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 19  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 19  
 
 1096   1      }   
 1097          
@@ -1214,7 +1214,7 @@ line level    source
 1155          {
 1156   1        win_str_data.language = btn_val;         // 1. 保存语言编号到全局变量
 1157   1        norflash_write(SYS_LANGUAGE_OFFSET,(u8 *)&win_str_data.language,2);  // 2. 写入NorFlash持久化存储
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 20  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 20  
 
 1158   1      }
 1159          
@@ -1278,7 +1278,7 @@ line level    source
 1216   1      //10. calc level vs voltage function
 1217   1        win_calc_function();
 1218   1        sys_delay_about_ms(6000);
-C51 COMPILER V9.60.7.0   START_WIN                                                         10/22/2026 19:30:08 PAGE 21  
+C51 COMPILER V9.60.7.0   START_WIN                                                         10/23/2026 09:28:18 PAGE 21  
 
 1219   1      //11. jump work page  
 1220   1      

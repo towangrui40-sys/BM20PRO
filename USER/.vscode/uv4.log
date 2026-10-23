@@ -1,6 +1,6 @@
 Build target 'TEMPLATE'
 linking...
-Program Size: data=45.2 xdata=4619 const=841 code=23310
+Program Size: data=45.2 xdata=4619 const=841 code=23505
 creating hex file from "..\OBJ\T5_HMI_V1.0"...
 "..\OBJ\T5_HMI_V1.0" - 0 Error(s), 0 Warning(s).
 Build Time Elapsed:  00:00:04

@@ -184,40 +184,6 @@ void Run_FSM(void)
 			}
 			break;
 
-
-		case FSM_POSITION_CHECK:
-			if(str_sys.case_state == OPEN_PLACE)        //初始化开盖完成
-			{
-				RTU_Cmd_Pending(RTU_SET_LED,RED);
-				win_change_page(POPUP_LOCK_RESET);
-				win_str_data.state = FSM_LOCK_RESET;
-			}
-			break;
-
-		case FSM_INIT_LEAVE_POS2:
-			if(str_sys.location_test != 0x02)           //已经离开2号位
-			{
-				win_str_data.state = FSM_INIT_WAIT_POS2;
-			}
-			break;
-
-		case FSM_INIT_WAIT_POS2:
-			//等待HFPeriod_1msTask检测重新到达2号位
-			break;
-
-		case FSM_LOCK_RESET:
-				RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
-				win_str_data.state = FSM_LOCK_RELOCK;
-			break;
-
-		case FSM_LOCK_RELOCK:
-			if(str_sys.lock_state == 1)
-			{
-				win_change_page(SELECT_TANK_PAGE);
-				win_str_data.state = FSM_TANK_SELECT;
-			}
-			break;
-
 		case FSM_INIT_LOCK_CHECK:
 			if(str_sys.tank_lock == 0)
 			{
@@ -272,6 +238,41 @@ void Run_FSM(void)
 				start_pos2_detect();
 			}
 			break;
+
+		case FSM_INIT_LEAVE_POS2:
+			if(str_sys.location_test != 0x02)           //已经离开2号位
+			{
+				win_str_data.state = FSM_INIT_WAIT_POS2;
+			}
+			break;
+
+		case FSM_INIT_WAIT_POS2:
+			//等待HFPeriod_1msTask检测重新到达2号位
+			break;
+
+		case FSM_POSITION_CHECK:
+			if(str_sys.case_state == OPEN_PLACE)        //初始化开盖完成
+			{
+				win_str_data.lid_cmd = 0x01;
+				RTU_Cmd_Pending(RTU_SET_LED,RED);
+				win_change_page(POPUP_LOCK_RESET);
+				win_str_data.state = FSM_LOCK_RESET;
+			}
+			break;
+
+		case FSM_LOCK_RESET:
+				RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+				win_str_data.state = FSM_LOCK_RELOCK;
+			break;
+
+		case FSM_LOCK_RELOCK:
+			if(str_sys.lock_state == 1)
+			{
+				win_change_page(SELECT_TANK_PAGE);
+				win_str_data.state = FSM_TANK_SELECT;
+			}
+			break;
+
 		case FSM_TANK_SELECT:
 			temp = (str_sys.location_test == 0x01);
 			sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
@@ -285,17 +286,17 @@ void Run_FSM(void)
 
 				if(str_sys.location_test == 0x01)       //在1号位，反转离开
 				{
-					Send_voltage_service(200);
+					Send_voltage_service(23);
 					RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
 				}
 				else if(str_sys.location_test == 0x02)  //在2号位，正转离开
 				{
-					Send_voltage_service(200);
+					Send_voltage_service(23);
 					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
 				}
 
 				win_str_data.lid_cmd = 0x00;
-				win_str_data.state = FSM_CLOSE_LID1;
+				win_str_data.state = FSM_CLOSE_CLEAR_TANK_POS;
 			}
 			else if(win_str_data.tank_lock_action == 1) //选择页开锁
 			{
@@ -304,7 +305,7 @@ void Run_FSM(void)
 				{
 					RTU_Cmd_Pending(RTU_SET_LED,RED);
 					RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
-					win_str_data.state = FSM_LOCK_1;
+					win_str_data.state = FSM_TANK_LOCK_WAIT_UNLOCK;
 				}
 			}
 			else if(win_str_data.sel_bowll == 1)        //选择1号位
@@ -329,41 +330,6 @@ void Run_FSM(void)
 					Send_voltage_service(20);
 					RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
 					win_str_data.state = FSM_TANK_MOVE_POS2;
-				}
-			}
-			break;
-
-		case FSM_LOCK_1:
-			if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
-			{
-				win_str_data.state = FSM_LOCK_2;         //解锁完成，等待把手下压
-			}
-			break;
-
-		case FSM_LOCK_2:
-			if(str_sys.tank_lock == 0)                  //把手下压到位
-			{
-				win_change_page(POPUP_LOCKING);        //正在锁紧
-				RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
-				win_str_data.state = FSM_LOCK_3;
-			}
-			break;
-
-		case FSM_LOCK_3:
-			if(str_sys.lock_state == 1)
-			{
-				if(str_sys.tank_lock == 1)
-				{
-					RTU_Cmd_Pending(RTU_SET_LED,RED);
-					RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
-					win_str_data.state = FSM_LOCK_1;
-				}
-				else
-				{
-					RTU_Cmd_Pending(RTU_SET_LED,GREEN);
-					win_str_data.sel_bowll = 0;
-					win_change_page(SELECT_TANK_PAGE);
-					win_str_data.state = FSM_TANK_SELECT;
 				}
 			}
 			break;
@@ -393,8 +359,97 @@ void Run_FSM(void)
 				win_str_data.state = FSM_TANK_SELECT;
 			}
 			break;
+
+		case FSM_TANK_LOCK_WAIT_UNLOCK:
+			if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
+			{
+				win_str_data.state = FSM_TANK_LOCK_WAIT_PRESS;  //解锁完成，等待把手下压
+			}
+			break;
+
+		case FSM_TANK_LOCK_WAIT_PRESS:
+			if(str_sys.tank_lock == 0)                  //把手下压到位
+			{
+				win_change_page(POPUP_LOCKING);        //正在锁紧
+				RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+				win_str_data.state = FSM_TANK_LOCK_WAIT_LOCK;
+			}
+			break;
+
+		case FSM_TANK_LOCK_WAIT_LOCK:
+			if(str_sys.lock_state == 1)
+			{
+				if(str_sys.tank_lock == 1)
+				{
+					RTU_Cmd_Pending(RTU_SET_LED,RED);
+					RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
+					win_str_data.state = FSM_TANK_LOCK_WAIT_UNLOCK;
+				}
+				else
+				{
+					RTU_Cmd_Pending(RTU_SET_LED,GREEN);
+					win_str_data.sel_bowll = 0;
+					win_change_page(SELECT_TANK_PAGE);
+					win_str_data.state = FSM_TANK_SELECT;
+				}
+			}
+			break;
+
+		case FSM_CLOSE_CLEAR_TANK_POS:
+			if(win_str_data.lid_cmd == 0x00)            //开盖状态
+			{
+				if(str_sys.location_test != 0x01 && str_sys.location_test != 0x02)
+				{
+					win_change_page(POPUP_LOCKING);    //等待界面，页面38
+					RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+					win_str_data.state = FSM_CLOSE_LOCK_TO_RUN;
+					win_str_data.fsm_tick = 2;
+				}
+			}
+			break;
+
+		case FSM_CLOSE_LOCK_TO_RUN:
+			if(win_str_data.fsm_tick == 0)
+			{
+				RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK_TO_RUN);
+				win_str_data.state = FSM_CLOSE_SEND_CASE_CMD;
+			}
+			break;
+
+		case FSM_CLOSE_SEND_CASE_CMD:
+			if(str_sys.lock_state == 2)                //锁转到运行位
+			{
+				RTU_Cmd_Pending(RTU_CASE_ACTION,CLOSE); //关闭盖子
+				win_str_data.state = FSM_CLOSE_WAIT_CASE_DONE;
+			}
+			break;
+
+		case FSM_CLOSE_WAIT_CASE_DONE:
+			if(str_sys.case_state == CLOSE_PLACE)      //盖子关到位
+			{
+				win_change_page(WORK_PAGE);
+				win_str_data.state = FSM_READY;
+			}
+			break;
+		case FSM_READY:
+				if(win_str_data.lid_cmd == 0x11)	//open lid
+				{
+					win_change_page(POPUP_DETECT_TURN);    //等待界面，页面38
+					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+					Send_voltage_service(20);      //发送20rpm对应的转速
+					win_str_data.lid_cmd = 0x01;
+					win_str_data.bowl_tick = 30;
+					
+					temp = 0;
+					sys_write_vp(ICON_BOWL1_TEST_CH_ADDR,(u8*)&temp,2);
+					sys_write_vp(ICON_BOWL2_TEST_CH_ADDR,(u8*)&temp,2);
+				}
+
+			break;
+
 		default:
 			break;
+
 	}
 }
 
@@ -408,7 +463,7 @@ void HFPeriod_1msTask(void)
 	{
 		win_change_page(POPUP_CASE);       //等待盖子到位
 		RTU_Cmd_Pending(RTU_STOP,MC_STOP);
-		RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK);
+		RTU_Cmd_Pending(RTU_CASE_ACTION,OPEN);
 		win_str_data.state = FSM_POSITION_CHECK;
 	}
 
@@ -416,11 +471,11 @@ void HFPeriod_1msTask(void)
 	{
 		if(str_sys.location_test == 0x02 && win_str_data.lid_cmd == 0x01)  // turn to No.2 seat  open the lid
 		{
-			win_str_data.lid_cmd = 0x00;
+			win_str_data.lid_cmd = 0x00;                //开盖命令只发送一次
 			win_change_page(POPUP_CASE);   //等待盖子到位界面
 			RTU_Cmd_Pending(RTU_STOP,MC_STOP);
-			RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK); //send unlock lid
-			win_str_data.state = FSM_POSITION_CHECK;
+			RTU_Cmd_Pending(RTU_CASE_ACTION,OPEN);  //发送开盖命令
+			win_str_data.state = FSM_POSITION_CHECK; //等待开盖到位后复位锁紧装置，再进入选罐
 		}
 	}
 }

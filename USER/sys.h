@@ -125,35 +125,42 @@ extern SysDataDef str_sys;
 
 typedef enum
 {
-  	FSM_POWER_ON = 0,        // 开机第一步：判断盖子状态
-	FSM_READY,               // 就绪/待机
-	FSM_START,               // 启动电机
-	FSM_RUN,                 // 正常运行
-	FSM_PAUSE,               // 暂停
-	FSM_STOP,                // 停止
-	FSM_STOPPING,            // 等待电机减速到零
-	FSM_TANK_SELECT,         // 选择研磨罐/等待转盘选位
-	FSM_TANK_MOVE_POS1,      // 研磨罐转盘前往1号位
-	FSM_TANK_MOVE_POS2,      // 研磨罐转盘前往2号位
-	FSM_POSITION_CHECK,      // 检测转盘位置
-	FSM_CASE_CLOSE,          // 关盖流程
-	FSM_INIT_LEAVE_POS2,     // 初始化：先转离2号位
-	FSM_INIT_WAIT_POS2,      // 初始化：等待重新到达2号位
-	FSM_POWER_ON_DELAY,      // 开机等待控制器状态稳定
-	FSM_INIT_WAIT_LOCK,      // 初始化：等待研磨罐锁到位
-	FSM_INIT_RECLOSE,        // 初始化：盖子开着且不在罐位，先关盖再重开
-	FSM_LOCK_RESET,          // 开盖后复位锁紧装置
-	FSM_LOCK_RELOCK,         // 复位锁紧装置：重新上锁并等待到位
-	FSM_LOCK_1,              // 选罐开锁：等待解锁到位
-	FSM_LOCK_2,              // 选罐开锁：等待把手下压
-	FSM_LOCK_3,              // 选罐开锁：上锁并检查是否锁好
-	FSM_INIT_LOCKING,        // 初始化上锁：等待锁到位
-	FSM_INIT_UNLOCKING,      // 初始化上锁失败：自动解锁后等待重新按压
-	FSM_INIT_LOCK_CHECK,     // 初始化：检查转盘位置和研磨罐锁状态
-	FSM_CLOSE_LID1,          // 关盖：转离1/2号位
-	FSM_CLOSE_LID2,          // 关盖：等待锁转到运行位
-	FSM_CLOSE_LID3,          // 关盖：发送关盖命令
-	FSM_CLOSE_LID4,          // 关盖：等待盖子关到位
+	/* power on and run */
+	FSM_POWER_ON = 0,                  // 开机第一步
+	FSM_POWER_ON_DELAY = 14,           // 等待控制器状态稳定
+	FSM_READY = 1,                     // 就绪/待机
+	FSM_START = 2,                     // 启动电机
+	FSM_RUN = 3,                       // 正常运行
+	FSM_PAUSE = 4,                     // 暂停
+	FSM_STOPPING = 6,                  // 等待电机减速到零
+	FSM_STOP = 5,                      // 停止
+
+	/* initialization */
+	FSM_INIT_LOCK_CHECK = 24,          // 检查位置和锁状态
+	FSM_INIT_WAIT_LOCK = 15,           // 等待研磨罐锁到位
+	FSM_INIT_LOCKING = 22,             // 初始化上锁中
+	FSM_INIT_UNLOCKING = 23,           // 初始化上锁失败，自动解锁
+	FSM_INIT_RECLOSE = 16,             // 关盖后重新初始化
+	FSM_INIT_LEAVE_POS2 = 12,          // 先转离2号位
+	FSM_INIT_WAIT_POS2 = 13,           // 等待重新到达2号位
+	FSM_POSITION_CHECK = 10,           // 开盖后检查位置
+	FSM_LOCK_RESET = 17,               // 开盖后复位锁紧装置
+	FSM_LOCK_RELOCK = 18,              // 等待锁紧装置重新到位
+
+	/* tank selection */
+	FSM_TANK_SELECT = 7,               // 选择研磨罐
+	FSM_TANK_MOVE_POS1 = 8,            // 前往1号位
+	FSM_TANK_MOVE_POS2 = 9,            // 前往2号位
+	FSM_TANK_LOCK_WAIT_UNLOCK = 19,    // 等待解锁到位
+	FSM_TANK_LOCK_WAIT_PRESS = 20,     // 等待把手下压
+	FSM_TANK_LOCK_WAIT_LOCK = 21,      // 等待重新上锁到位
+
+	/* close lid */
+	FSM_CASE_CLOSE = 11,               // 关盖流程
+	FSM_CLOSE_CLEAR_TANK_POS = 25,     // 转离1/2号位
+	FSM_CLOSE_LOCK_TO_RUN = 26,        // 锁转到运行位
+	FSM_CLOSE_SEND_CASE_CMD = 27,      // 发送关盖命令
+	FSM_CLOSE_WAIT_CASE_DONE = 28,     // 等待盖子关到位
 }FSM_StateType;
 
 typedef enum

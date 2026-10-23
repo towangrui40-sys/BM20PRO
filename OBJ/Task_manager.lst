@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 1   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TASK_MANAGER
@@ -62,7 +62,7 @@ line level    source
   49   1        static u16 xdata temp = 0;
   50   1        static u16 xdata tick = 0;
   51   1        static u16 xdata spk = 0;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 2   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 2   
 
   52   1        static u16 xdata spk_tick = 0;
   53   1        static u16 xdata Once_flag = 0;
@@ -126,7 +126,7 @@ line level    source
  111   1      
  112   1        if(win_str_data.state == FSM_READY)
  113   1        {
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 3   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 3   
 
  114   2          win_str_data.fan_tick++;
  115   2          if(win_str_data.fan_tick >= 1200)
@@ -190,7 +190,7 @@ line level    source
  173   2            {
  174   3              start_pos2_detect();
  175   3            }
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 4   
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 4   
 
  176   2            else if(str_sys.location_test != 0x01 && str_sys.location_test != 0x02)
  177   2            {
@@ -203,284 +203,346 @@ line level    source
  184   3            }
  185   2            break;
  186   2      
- 187   2      
- 188   2          case FSM_POSITION_CHECK:
- 189   2            if(str_sys.case_state == OPEN_PLACE)        //初始化开盖完成
- 190   2            {
- 191   3              RTU_Cmd_Pending(RTU_SET_LED,RED);
- 192   3              win_change_page(POPUP_LOCK_RESET);
- 193   3              win_str_data.state = FSM_LOCK_RESET;
- 194   3            }
- 195   2            break;
- 196   2      
- 197   2          case FSM_INIT_LEAVE_POS2:
- 198   2            if(str_sys.location_test != 0x02)           //已经离开2号位
- 199   2            {
- 200   3              win_str_data.state = FSM_INIT_WAIT_POS2;
+ 187   2          case FSM_INIT_LOCK_CHECK:
+ 188   2            if(str_sys.tank_lock == 0)
+ 189   2            {
+ 190   3              start_init_reclose();
+ 191   3            }
+ 192   2            else if(str_sys.lock_state == 1 && str_sys.tank_lock == 1)
+ 193   2            {
+ 194   3              start_init_unlock();
+ 195   3            }
+ 196   2            else
+ 197   2            {
+ 198   3              RTU_Cmd_Pending(RTU_SET_LED,RED);
+ 199   3              win_change_page(POPUP_PRESS_HANDLE);          //请下压把手
+ 200   3              win_str_data.state = FSM_INIT_WAIT_LOCK;
  201   3            }
  202   2            break;
  203   2      
- 204   2          case FSM_INIT_WAIT_POS2:
- 205   2            //等待HFPeriod_1msTask检测重新到达2号位
- 206   2            break;
- 207   2      
- 208   2          case FSM_LOCK_RESET:
- 209   2              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
- 210   2              win_str_data.state = FSM_LOCK_RELOCK;
+ 204   2          case FSM_INIT_WAIT_LOCK:
+ 205   2            if(str_sys.tank_lock == 0)
+ 206   2            {
+ 207   3              win_change_page(POPUP_LOCKING);            //正在锁紧
+ 208   3              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+ 209   3              win_str_data.state = FSM_INIT_LOCKING;
+ 210   3            }
  211   2            break;
  212   2      
- 213   2          case FSM_LOCK_RELOCK:
+ 213   2          case FSM_INIT_LOCKING:
  214   2            if(str_sys.lock_state == 1)
  215   2            {
- 216   3              win_change_page(SELECT_TANK_PAGE);
- 217   3              win_str_data.state = FSM_TANK_SELECT;
- 218   3            }
- 219   2            break;
- 220   2      
- 221   2          case FSM_INIT_LOCK_CHECK:
- 222   2            if(str_sys.tank_lock == 0)
- 223   2            {
- 224   3              start_init_reclose();
- 225   3            }
- 226   2            else if(str_sys.lock_state == 1 && str_sys.tank_lock == 1)
- 227   2            {
- 228   3              start_init_unlock();
- 229   3            }
- 230   2            else
- 231   2            {
- 232   3              RTU_Cmd_Pending(RTU_SET_LED,RED);
- 233   3              win_change_page(POPUP_PRESS_HANDLE);          //请下压把手
- 234   3              win_str_data.state = FSM_INIT_WAIT_LOCK;
- 235   3            }
- 236   2            break;
- 237   2      
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 5   
+ 216   3              if(str_sys.tank_lock == 0)
+ 217   3              {
+ 218   4                start_init_reclose();                 //电机动作和传感器都到位
+ 219   4              }
+ 220   3              else                                      //锁到了但没锁好，自动解锁
+ 221   3              {
+ 222   4                start_init_unlock();
+ 223   4              }
+ 224   3            }
+ 225   2            break;
+ 226   2      
+ 227   2          case FSM_INIT_UNLOCKING:
+ 228   2            if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
+ 229   2            {
+ 230   3              win_change_page(POPUP_PRESS_HANDLE);
+ 231   3              win_str_data.state = FSM_INIT_WAIT_LOCK;  //解锁完成，等待重新按压
+ 232   3            }
+ 233   2            break;
+ 234   2      
+ 235   2          case FSM_INIT_RECLOSE:
+ 236   2            if(str_sys.case_state == CLOSE_PLACE)        //关盖到位后重新检测
+ 237   2            {
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 5   
 
- 238   2          case FSM_INIT_WAIT_LOCK:
- 239   2            if(str_sys.tank_lock == 0)
- 240   2            {
- 241   3              win_change_page(POPUP_LOCKING);            //正在锁紧
- 242   3              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
- 243   3              win_str_data.state = FSM_INIT_LOCKING;
- 244   3            }
- 245   2            break;
- 246   2      
- 247   2          case FSM_INIT_LOCKING:
- 248   2            if(str_sys.lock_state == 1)
- 249   2            {
- 250   3              if(str_sys.tank_lock == 0)
- 251   3              {
- 252   4                start_init_reclose();                 //电机动作和传感器都到位
- 253   4              }
- 254   3              else                                      //锁到了但没锁好，自动解锁
- 255   3              {
- 256   4                start_init_unlock();
- 257   4              }
- 258   3            }
- 259   2            break;
- 260   2      
- 261   2          case FSM_INIT_UNLOCKING:
- 262   2            if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
- 263   2            {
- 264   3              win_change_page(POPUP_PRESS_HANDLE);
- 265   3              win_str_data.state = FSM_INIT_WAIT_LOCK;  //解锁完成，等待重新按压
- 266   3            }
- 267   2            break;
- 268   2      
- 269   2          case FSM_INIT_RECLOSE:
- 270   2            if(str_sys.case_state == CLOSE_PLACE)        //关盖到位后重新检测
- 271   2            {
- 272   3              start_pos2_detect();
+ 238   3              start_pos2_detect();
+ 239   3            }
+ 240   2            break;
+ 241   2      
+ 242   2          case FSM_INIT_LEAVE_POS2:
+ 243   2            if(str_sys.location_test != 0x02)           //已经离开2号位
+ 244   2            {
+ 245   3              win_str_data.state = FSM_INIT_WAIT_POS2;
+ 246   3            }
+ 247   2            break;
+ 248   2      
+ 249   2          case FSM_INIT_WAIT_POS2:
+ 250   2            //等待HFPeriod_1msTask检测重新到达2号位
+ 251   2            break;
+ 252   2      
+ 253   2          case FSM_POSITION_CHECK:
+ 254   2            if(str_sys.case_state == OPEN_PLACE)        //初始化开盖完成
+ 255   2            {
+ 256   3              win_str_data.lid_cmd = 0x01;
+ 257   3              RTU_Cmd_Pending(RTU_SET_LED,RED);
+ 258   3              win_change_page(POPUP_LOCK_RESET);
+ 259   3              win_str_data.state = FSM_LOCK_RESET;
+ 260   3            }
+ 261   2            break;
+ 262   2      
+ 263   2          case FSM_LOCK_RESET:
+ 264   2              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+ 265   2              win_str_data.state = FSM_LOCK_RELOCK;
+ 266   2            break;
+ 267   2      
+ 268   2          case FSM_LOCK_RELOCK:
+ 269   2            if(str_sys.lock_state == 1)
+ 270   2            {
+ 271   3              win_change_page(SELECT_TANK_PAGE);
+ 272   3              win_str_data.state = FSM_TANK_SELECT;
  273   3            }
  274   2            break;
- 275   2          case FSM_TANK_SELECT:
- 276   2            temp = (str_sys.location_test == 0x01);
- 277   2            sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
- 278   2            temp = (str_sys.location_test == 0x02);
- 279   2            sys_write_vp(ICON_BOWL_SEL2_ADDR,(u8 *)&temp,1);
- 280   2      
- 281   2            if(win_str_data.lid_cmd == 0x10)            //请求关盖，优先处理
- 282   2            {
- 283   3              if(str_sys.set_motor != MC_STOP)
- 284   3              {
- 285   4                str_sys.set_motor = MC_STOP;
- 286   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
- 287   4              }
- 288   3              win_str_data.sel_bowll = 0;
- 289   3              win_str_data.bowl_tick = 0;
- 290   3              win_str_data.lid_cmd = 0x00;
- 291   3              win_change_page(POPUP_CASE);
- 292   3              RTU_Cmd_Pending(RTU_CASE_ACTION,CLOSE);
- 293   3              win_str_data.state = FSM_CASE_CLOSE;
- 294   3            }
- 295   2            else if(win_str_data.tank_lock_action == 1) //选择页开锁
- 296   2            {
- 297   3              win_str_data.tank_lock_action = 0;
- 298   3              if(str_sys.location_test == 0x01 || str_sys.location_test == 0x02)
- 299   3              {
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 6   
+ 275   2      
+ 276   2          case FSM_TANK_SELECT:
+ 277   2            temp = (str_sys.location_test == 0x01);
+ 278   2            sys_write_vp(ICON_BOWL_SEL1_ADDR,(u8 *)&temp,1);
+ 279   2            temp = (str_sys.location_test == 0x02);
+ 280   2            sys_write_vp(ICON_BOWL_SEL2_ADDR,(u8 *)&temp,1);
+ 281   2      
+ 282   2            if(win_str_data.lid_cmd == 0x10)            //请求关盖，优先处理
+ 283   2            {
+ 284   3              win_str_data.sel_bowll = 0;
+ 285   3              win_str_data.bowl_tick = 0;
+ 286   3      
+ 287   3              if(str_sys.location_test == 0x01)       //在1号位，反转离开
+ 288   3              {
+ 289   4                Send_voltage_service(23);
+ 290   4                RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+ 291   4              }
+ 292   3              else if(str_sys.location_test == 0x02)  //在2号位，正转离开
+ 293   3              {
+ 294   4                Send_voltage_service(23);
+ 295   4                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 296   4              }
+ 297   3      
+ 298   3              win_str_data.lid_cmd = 0x00;
+ 299   3              win_str_data.state = FSM_CLOSE_CLEAR_TANK_POS;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 6   
 
- 300   4                RTU_Cmd_Pending(RTU_SET_LED,RED);
- 301   4                RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
- 302   4                win_str_data.state = FSM_LOCK_1;
- 303   4              }
- 304   3            }
- 305   2            else if(win_str_data.sel_bowll == 1)        //选择1号位
- 306   2            {
- 307   3              win_str_data.sel_bowll = 0;
- 308   3              if(str_sys.location_test != 0x01)
- 309   3              {
- 310   4                win_str_data.bowl_tick = 4*4;
- 311   4                str_sys.set_motor = MC_FWD;
- 312   4                Send_voltage_service(20);
- 313   4                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
- 314   4                win_str_data.state = FSM_TANK_MOVE_POS1;
- 315   4              }
- 316   3            }
- 317   2            else if(win_str_data.sel_bowll == 2)        //选择2号位
- 318   2            {
- 319   3              win_str_data.sel_bowll = 0;
- 320   3              if(str_sys.location_test != 0x02)
- 321   3              {
- 322   4                win_str_data.bowl_tick = 4*4;
- 323   4                str_sys.set_motor = MC_REV;
- 324   4                Send_voltage_service(20);
- 325   4                RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
- 326   4                win_str_data.state = FSM_TANK_MOVE_POS2;
- 327   4              }
- 328   3            }
- 329   2            break;
- 330   2      
- 331   2          case FSM_LOCK_1:
- 332   2            if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
- 333   2            {
- 334   3              win_str_data.state = FSM_LOCK_2;         //解锁完成，等待把手下压
- 335   3            }
- 336   2            break;
- 337   2      
- 338   2          case FSM_LOCK_2:
- 339   2            if(str_sys.tank_lock == 0)                  //把手下压到位
- 340   2            {
- 341   3              win_change_page(POPUP_LOCKING);        //正在锁紧
- 342   3              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
- 343   3              win_str_data.state = FSM_LOCK_3;
- 344   3            }
- 345   2            break;
- 346   2      
- 347   2          case FSM_LOCK_3:
- 348   2            if(str_sys.lock_state == 1)
- 349   2            {
- 350   3              if(str_sys.tank_lock == 1)
- 351   3              {
- 352   4                RTU_Cmd_Pending(RTU_SET_LED,RED);
- 353   4                RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
- 354   4                win_str_data.state = FSM_LOCK_1;
- 355   4              }
- 356   3              else
- 357   3              {
- 358   4                RTU_Cmd_Pending(RTU_SET_LED,GREEN);
- 359   4                win_str_data.sel_bowll = 0;
- 360   4                win_change_page(SELECT_TANK_PAGE);
- 361   4                win_str_data.state = FSM_TANK_SELECT;
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 7   
+ 300   3            }
+ 301   2            else if(win_str_data.tank_lock_action == 1) //选择页开锁
+ 302   2            {
+ 303   3              win_str_data.tank_lock_action = 0;
+ 304   3              if(str_sys.location_test == 0x01 || str_sys.location_test == 0x02)
+ 305   3              {
+ 306   4                RTU_Cmd_Pending(RTU_SET_LED,RED);
+ 307   4                RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
+ 308   4                win_str_data.state = FSM_TANK_LOCK_WAIT_UNLOCK;
+ 309   4              }
+ 310   3            }
+ 311   2            else if(win_str_data.sel_bowll == 1)        //选择1号位
+ 312   2            {
+ 313   3              win_str_data.sel_bowll = 0;
+ 314   3              if(str_sys.location_test != 0x01)
+ 315   3              {
+ 316   4                win_str_data.bowl_tick = 4*4;
+ 317   4                str_sys.set_motor = MC_FWD;
+ 318   4                Send_voltage_service(20);
+ 319   4                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 320   4                win_str_data.state = FSM_TANK_MOVE_POS1;
+ 321   4              }
+ 322   3            }
+ 323   2            else if(win_str_data.sel_bowll == 2)        //选择2号位
+ 324   2            {
+ 325   3              win_str_data.sel_bowll = 0;
+ 326   3              if(str_sys.location_test != 0x02)
+ 327   3              {
+ 328   4                win_str_data.bowl_tick = 4*4;
+ 329   4                str_sys.set_motor = MC_REV;
+ 330   4                Send_voltage_service(20);
+ 331   4                RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+ 332   4                win_str_data.state = FSM_TANK_MOVE_POS2;
+ 333   4              }
+ 334   3            }
+ 335   2            break;
+ 336   2      
+ 337   2          case FSM_TANK_MOVE_POS1:
+ 338   2            if(str_sys.location_test == 0x01 || win_str_data.bowl_tick == 0)
+ 339   2            {
+ 340   3              if(str_sys.set_motor != MC_STOP)
+ 341   3              {
+ 342   4                str_sys.set_motor = MC_STOP;
+ 343   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 344   4              }
+ 345   3              win_str_data.bowl_tick = 0;
+ 346   3              win_str_data.state = FSM_TANK_SELECT;
+ 347   3            }
+ 348   2            break;
+ 349   2      
+ 350   2          case FSM_TANK_MOVE_POS2:
+ 351   2            if(str_sys.location_test == 0x02 || win_str_data.bowl_tick == 0)
+ 352   2            {
+ 353   3              if(str_sys.set_motor != MC_STOP)
+ 354   3              {
+ 355   4                str_sys.set_motor = MC_STOP;
+ 356   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 357   4              }
+ 358   3              win_str_data.bowl_tick = 0;
+ 359   3              win_str_data.state = FSM_TANK_SELECT;
+ 360   3            }
+ 361   2            break;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 7   
 
- 362   4              }
- 363   3            }
- 364   2            break;
- 365   2      
- 366   2          case FSM_TANK_MOVE_POS1:
- 367   2            if(str_sys.location_test == 0x01 || win_str_data.bowl_tick == 0)
- 368   2            {
- 369   3              if(str_sys.set_motor != MC_STOP)
- 370   3              {
- 371   4                str_sys.set_motor = MC_STOP;
- 372   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
- 373   4              }
- 374   3              win_str_data.bowl_tick = 0;
- 375   3              win_str_data.state = FSM_TANK_SELECT;
+ 362   2      
+ 363   2          case FSM_TANK_LOCK_WAIT_UNLOCK:
+ 364   2            if(str_sys.lock_state == 0 && str_sys.tank_lock == 1)
+ 365   2            {
+ 366   3              win_str_data.state = FSM_TANK_LOCK_WAIT_PRESS;  //解锁完成，等待把手下压
+ 367   3            }
+ 368   2            break;
+ 369   2      
+ 370   2          case FSM_TANK_LOCK_WAIT_PRESS:
+ 371   2            if(str_sys.tank_lock == 0)                  //把手下压到位
+ 372   2            {
+ 373   3              win_change_page(POPUP_LOCKING);        //正在锁紧
+ 374   3              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK);
+ 375   3              win_str_data.state = FSM_TANK_LOCK_WAIT_LOCK;
  376   3            }
  377   2            break;
  378   2      
- 379   2          case FSM_TANK_MOVE_POS2:
- 380   2            if(str_sys.location_test == 0x02 || win_str_data.bowl_tick == 0)
+ 379   2          case FSM_TANK_LOCK_WAIT_LOCK:
+ 380   2            if(str_sys.lock_state == 1)
  381   2            {
- 382   3              if(str_sys.set_motor != MC_STOP)
+ 382   3              if(str_sys.tank_lock == 1)
  383   3              {
- 384   4                str_sys.set_motor = MC_STOP;
- 385   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
- 386   4              }
- 387   3              win_str_data.bowl_tick = 0;
- 388   3              win_str_data.state = FSM_TANK_SELECT;
- 389   3            }
- 390   2            break;
- 391   2          default:
- 392   2            break;
- 393   2        }
- 394   1      }
- 395          
- 396          void HFPeriod_1msTask(void)
- 397          {
- 398   1        btn_click_handler();
- 399   1        rtu_response_handler();
- 400   1        win_fresh_window(&str_sys);
- 401   1      
- 402   1        if(win_str_data.state == FSM_INIT_WAIT_POS2 && str_sys.location_test == 0x02)
- 403   1        {
- 404   2          win_change_page(POPUP_CASE);       //等待盖子到位
- 405   2          RTU_Cmd_Pending(RTU_STOP,MC_STOP);
- 406   2          RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK);
- 407   2          win_str_data.state = FSM_POSITION_CHECK;
- 408   2        }
- 409   1      
- 410   1        if(win_str_data.state == FSM_READY || win_str_data.state == FSM_PAUSE) 
- 411   1        {
- 412   2          if(str_sys.location_test == 0x02 && win_str_data.lid_cmd == 0x01)  // turn to No.2 seat  open the lid
- 413   2          {
- 414   3            win_str_data.lid_cmd = 0x00;
- 415   3            win_change_page(POPUP_CASE);   //等待盖子到位界面
- 416   3            RTU_Cmd_Pending(RTU_STOP,MC_STOP);
- 417   3            RTU_Cmd_Pending(RTU_CASE_ACTION,UNLOCK); //send unlock lid
- 418   3            win_str_data.state = FSM_POSITION_CHECK;
- 419   3          }
- 420   2        }
- 421   1      }
- 422          
- 423          void Task_Manage_List_Init(void)
-C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/22/2026 19:46:02 PAGE 8   
+ 384   4                RTU_Cmd_Pending(RTU_SET_LED,RED);
+ 385   4                RTU_Cmd_Pending(RTU_LOCK_ACTION,UNLOCK);
+ 386   4                win_str_data.state = FSM_TANK_LOCK_WAIT_UNLOCK;
+ 387   4              }
+ 388   3              else
+ 389   3              {
+ 390   4                RTU_Cmd_Pending(RTU_SET_LED,GREEN);
+ 391   4                win_str_data.sel_bowll = 0;
+ 392   4                win_change_page(SELECT_TANK_PAGE);
+ 393   4                win_str_data.state = FSM_TANK_SELECT;
+ 394   4              }
+ 395   3            }
+ 396   2            break;
+ 397   2      
+ 398   2          case FSM_CLOSE_CLEAR_TANK_POS:
+ 399   2            if(win_str_data.lid_cmd == 0x00)            //开盖状态
+ 400   2            {
+ 401   3              if(str_sys.location_test != 0x01 && str_sys.location_test != 0x02)
+ 402   3              {
+ 403   4                win_change_page(POPUP_LOCKING);    //等待界面，页面38
+ 404   4                RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 405   4                win_str_data.state = FSM_CLOSE_LOCK_TO_RUN;
+ 406   4                win_str_data.fsm_tick = 2;
+ 407   4              }
+ 408   3            }
+ 409   2            break;
+ 410   2      
+ 411   2          case FSM_CLOSE_LOCK_TO_RUN:
+ 412   2            if(win_str_data.fsm_tick == 0)
+ 413   2            {
+ 414   3              RTU_Cmd_Pending(RTU_LOCK_ACTION,LOCK_TO_RUN);
+ 415   3              win_str_data.state = FSM_CLOSE_SEND_CASE_CMD;
+ 416   3            }
+ 417   2            break;
+ 418   2      
+ 419   2          case FSM_CLOSE_SEND_CASE_CMD:
+ 420   2            if(str_sys.lock_state == 2)                //锁转到运行位
+ 421   2            {
+ 422   3              RTU_Cmd_Pending(RTU_CASE_ACTION,CLOSE); //关闭盖子
+ 423   3              win_str_data.state = FSM_CLOSE_WAIT_CASE_DONE;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 8   
 
- 424          {
- 425   1        TasksPare[0].Task_Period = HFPeriod_COUNT;
- 426   1        TasksPare[0].Task_Count = 1;
- 427   1        TasksPare[0].Task_Function = HFPeriod_1msTask;
- 428   1      
- 429   1        TasksPare[1].Task_Period = RTUPeriod_COUNT;
- 430   1        TasksPare[1].Task_Count = 8;
- 431   1        TasksPare[1].Task_Function = RTU_send_Rece;
- 432   1      
- 433   1        TasksPare[2].Task_Period = FSMPeriod_COUNT;
- 434   1        TasksPare[2].Task_Count = 80;
- 435   1        TasksPare[2].Task_Function = Run_FSM;
- 436   1      
- 437   1        TasksPare[3].Task_Period = TIMERPeriod_COUNT;
- 438   1        TasksPare[3].Task_Count = 300;
- 439   1        TasksPare[3].Task_Function = Task_Timer_Sec;
- 440   1      }
- 441          
- 442          void Send_voltage_service(u16 send_speed)
- 443          {
- 444   1        u16 vol_temp;
- 445   1        vol_temp = win_level_trans_volt(send_speed);
- 446   1      
- 447   1        if(vol_temp != str_sys.set_speed)
- 448   1        {
- 449   2          str_sys.set_speed = vol_temp;
- 450   2          RTU_Cmd_Pending(RTU_SET_SPEED,vol_temp);
- 451   2        }
- 452   1      }
+ 424   3            }
+ 425   2            break;
+ 426   2      
+ 427   2          case FSM_CLOSE_WAIT_CASE_DONE:
+ 428   2            if(str_sys.case_state == CLOSE_PLACE)      //盖子关到位
+ 429   2            {
+ 430   3              win_change_page(WORK_PAGE);
+ 431   3              win_str_data.state = FSM_READY;
+ 432   3            }
+ 433   2            break;
+ 434   2          case FSM_READY:
+ 435   2              if(win_str_data.lid_cmd == 0x11)  //open lid
+ 436   2              {
+ 437   3                win_change_page(POPUP_DETECT_TURN);    //等待界面，页面38
+ 438   3                RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+ 439   3                Send_voltage_service(20);      //发送20rpm对应的转速
+ 440   3                win_str_data.lid_cmd = 0x01;
+ 441   3                win_str_data.bowl_tick = 30;
+ 442   3                
+ 443   3                temp = 0;
+ 444   3                sys_write_vp(ICON_BOWL1_TEST_CH_ADDR,(u8*)&temp,2);
+ 445   3                sys_write_vp(ICON_BOWL2_TEST_CH_ADDR,(u8*)&temp,2);
+ 446   3              }
+ 447   2      
+ 448   2            break;
+ 449   2      
+ 450   2          default:
+ 451   2            break;
+ 452   2      
+ 453   2        }
+ 454   1      }
+ 455          
+ 456          void HFPeriod_1msTask(void)
+ 457          {
+ 458   1        btn_click_handler();
+ 459   1        rtu_response_handler();
+ 460   1        win_fresh_window(&str_sys);
+ 461   1      
+ 462   1        if(win_str_data.state == FSM_INIT_WAIT_POS2 && str_sys.location_test == 0x02)
+ 463   1        {
+ 464   2          win_change_page(POPUP_CASE);       //等待盖子到位
+ 465   2          RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 466   2          RTU_Cmd_Pending(RTU_CASE_ACTION,OPEN);
+ 467   2          win_str_data.state = FSM_POSITION_CHECK;
+ 468   2        }
+ 469   1      
+ 470   1        if(win_str_data.state == FSM_READY || win_str_data.state == FSM_PAUSE) 
+ 471   1        {
+ 472   2          if(str_sys.location_test == 0x02 && win_str_data.lid_cmd == 0x01)  // turn to No.2 seat  open the lid
+ 473   2          {
+ 474   3            win_str_data.lid_cmd = 0x00;                //开盖命令只发送一次
+ 475   3            win_change_page(POPUP_CASE);   //等待盖子到位界面
+ 476   3            RTU_Cmd_Pending(RTU_STOP,MC_STOP);
+ 477   3            RTU_Cmd_Pending(RTU_CASE_ACTION,OPEN);  //发送开盖命令
+ 478   3            win_str_data.state = FSM_POSITION_CHECK; //等待开盖到位后复位锁紧装置，再进入选罐
+ 479   3          }
+ 480   2        }
+ 481   1      }
+ 482          
+ 483          void Task_Manage_List_Init(void)
+ 484          {
+ 485   1        TasksPare[0].Task_Period = HFPeriod_COUNT;
+C51 COMPILER V9.60.7.0   TASK_MANAGER                                                      10/23/2026 10:31:12 PAGE 9   
+
+ 486   1        TasksPare[0].Task_Count = 1;
+ 487   1        TasksPare[0].Task_Function = HFPeriod_1msTask;
+ 488   1      
+ 489   1        TasksPare[1].Task_Period = RTUPeriod_COUNT;
+ 490   1        TasksPare[1].Task_Count = 8;
+ 491   1        TasksPare[1].Task_Function = RTU_send_Rece;
+ 492   1      
+ 493   1        TasksPare[2].Task_Period = FSMPeriod_COUNT;
+ 494   1        TasksPare[2].Task_Count = 80;
+ 495   1        TasksPare[2].Task_Function = Run_FSM;
+ 496   1      
+ 497   1        TasksPare[3].Task_Period = TIMERPeriod_COUNT;
+ 498   1        TasksPare[3].Task_Count = 300;
+ 499   1        TasksPare[3].Task_Function = Task_Timer_Sec;
+ 500   1      }
+ 501          
+ 502          void Send_voltage_service(u16 send_speed)
+ 503          {
+ 504   1        u16 vol_temp;
+ 505   1        vol_temp = win_level_trans_volt(send_speed);
+ 506   1      
+ 507   1        if(vol_temp != str_sys.set_speed)
+ 508   1        {
+ 509   2          str_sys.set_speed = vol_temp;
+ 510   2          RTU_Cmd_Pending(RTU_SET_SPEED,vol_temp);
+ 511   2        }
+ 512   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2332    ----
+   CODE SIZE        =   2642    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     38       6
    PDATA SIZE       =   ----    ----
