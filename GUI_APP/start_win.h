@@ -22,7 +22,10 @@
 #define ARTNUM_MAIN_CYCLE_ADDR   	      	0x2007
 #define ARTNUM_MAIN_CYCLE_HADDR		      	0X2008
 
+
 #define ARTNUM_MAIN_PROG_NUM_ADDR   	    0x200A
+#define ARTNUM_MAIN_LOAD_BAR_ADDR	      	0x200B
+
 /********************************************************/  
 //0x2020~0x203F
 #define ARTNUM_SET_LEVEL_ADDR		      0x2020
@@ -95,7 +98,7 @@
 #define SYS_SHAKE_OFFSET		0X04
 #define SYS_LAST_PROG_OFFSET	0X05
 #define RUNTIME_MIN_HADDR 	    0X06
-#define RUNTIME_MIN_LADDR 		0X07
+#define RUNTIME_MIN_LADDR 		0X08
 
 #define CUSTOM_BASE_NORADDR		0x10
 #define PROG1_BASE_NORADDR		0x20
@@ -141,6 +144,7 @@ typedef enum{
 	SYSTEM_PAGE,
 	PASSWORD_PAGE,
 	PASSWORD_CONFIRM_PAGE,
+	RATIO_SET_PAGE,
 	WORK_PAGE,
 	WORK_PAGE_NO_TOUCH,
 	WORK_CONFIRM_PAGE,
@@ -189,9 +193,7 @@ typedef struct{
 typedef struct{
 	u16 start;	// 0:stop 1:run:2:run-pause
 	u16 pause;	//0:No_pause 1:pause
-	u16 lock;		//0:No_lock 1:lock
 	u16 paras_sel;//current work parasmeters selected 
-	u16 factory_sel;
 	float k_factor;
 	float b_factor;
 	
@@ -218,7 +220,7 @@ typedef struct{
 	u16 disp_pause_time;
 	u16 disp_cycle;
 	u32 disp_count_time;
-	u16 pre_page;//the last page,use for reback last work page
+	u16 rfc;              //主页面离心加速度，0~60g
 	//nor flash cache variable//
 	u16 logo;     //0:on  1:off
 	int language;
@@ -230,7 +232,6 @@ typedef struct{
 	u16 used_time_l;
 	/********************/
 	u32 used_time;
-	u16 disp_time;
 	/********************/
 	u16 test_mode;//0:test mode 1:program mode 
 	u16 shak_warning;
@@ -238,7 +239,6 @@ typedef struct{
 	
 	
 	u16 passcode;
-	u16 product_tpage;
 	///////bg paras settings/////////
 	u16 lid_cmd;  //0x00:空闲     0x11:请求开盖    0x01:开盖进行中     0x10:请求关盖
 	///////select bowl/////////	
@@ -250,7 +250,6 @@ typedef struct{
 	u16 bowl_tick;
 	u16 nm_dir_flag;
 	u16 fsm_tick;
-	u16 start_close;
 	u16 input_disp1;
 	u16 input_disp2;
 	u16 input_disp3;
@@ -259,7 +258,6 @@ typedef struct{
 }STR_WIN_TypeDef;
 
 
-//START_WIN�ṹ��
 extern STR_WIN_TypeDef xdata win_str_data;
 
 typedef enum
@@ -276,12 +274,14 @@ void win_disp_pause_time(u16 ch,u16 val);
 void win_disp_dir(u16 ch, u16 val);
 void win_disp_count_time(u16 ch,u32 val);
 u16 win_sec_timer_handle(u16* stage);
+u32 win_calc_total_time_sec(void);
+void win_reset_grind_timer(void);
 
 void win_init(void);
 void win_change_page(u16 page);
 u16 win_level_trans_volt(u16 level);
 void win_fresh_timer_block(void);
-void win_fresh_window(SysDataDef *sys);
+void win_fresh_window(void);
 void Fresh_Service_Time(void);
 void disp_input_icon(void);
 #endif

@@ -7,14 +7,15 @@
 #include "main.h"
 
 u16 xdata tick_sec = 0;
+static u16 xdata timer_stage_sec = 0;
 code const char Software_version[11]={"V1.00"};
 
 code const char Dir_on[3] = {"ON"};
 code const char Dir_off[3] = {"OFF"};
 
 Product_TypeDef product_data[PRODUCT_TOTAL]={ 
-//id, product name,		 level		total_time	 work_time	   pause_time	  voltage		  current
-{ 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,        0,2542, 	    1000,15000,	},
+//id, product name,		 level		total_time	 work_time	   pause_time	  voltage
+{ 0,	"BM20Pro",		100,800,		1,99,     1,99,          1,99,        0,2410,},
 };
 
 STR_WIN_TypeDef xdata win_str_data;
@@ -48,7 +49,7 @@ void win_load_prog_paras(u16 offaddr,u8 *var_addr,u16 len);
 void win_fresh_model_icon(u16 mode);
 
 
-extern u16 const page_reg_ch[22]={
+extern u16 const page_reg_ch[23]={
 	{ 1}, // MENU_PAGE = 0
 	{ 2}, // MANUAL_PAGE
 	{ 3}, // LOGO_PAGE
@@ -57,6 +58,7 @@ extern u16 const page_reg_ch[22]={
 	{ 6}, // SYSTEM_PAGE
 	{ 8}, // PASSWORD_PAGE
 	{ 9}, // PASSWORD_CONFIRM_PAGE
+	{11}, // RATIO_SET_PAGE
 	{15}, // WORK_PAGE
 	{16}, // WORK_PAGE_NO_TOUCH
 	{17}, // WORK_CONFIRM_PAGE
@@ -175,6 +177,30 @@ u16 win_level_trans_volt(u16 level)
 
 	return (u16)temp;
 }
+
+u32 win_calc_total_time_sec(void)
+{
+	u32 total_minutes;
+
+	if(win_str_data.use_cycle == 0)
+	{
+		return 0;
+	}
+
+	total_minutes = (u32)win_str_data.use_cycle *
+		(win_str_data.use_run_time + win_str_data.use_pause_time);
+	if(total_minutes > win_str_data.use_pause_time)
+	{
+		total_minutes -= win_str_data.use_pause_time;
+	}
+	else
+	{
+		total_minutes = 0;
+	}
+
+	return total_minutes * 60;
+}
+
 //load bar display
 
 void win_change_page(u16 page)
@@ -194,7 +220,7 @@ void win_change_page(u16 page)
 				win_disp_dir(MAIN_TIMER, win_str_data.use_dir);
 			
 				sys_write_vp(ARTNUM_MAIN_PROG_NUM_ADDR,(u8*)&win_str_data.prog_grp,1);
-				win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time) * 60);
+				win_str_data.disp_count_time = win_calc_total_time_sec();
 				win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
 			}
 			break;
@@ -220,6 +246,10 @@ void win_change_page(u16 page)
 			win_disp_pause_time(PROG_TIMER,win_str_data.prog_pause_time);
 			win_disp_dir(PROG_TIMER, win_str_data.prog_dir);
 
+			break;
+
+		case SYSTEM_PAGE:
+			Fresh_Service_Time();
 			break;
 		default:break;
 	}
@@ -300,8 +330,11 @@ static void win_main_btn_click_handler(u16 btn_val)
 				win_str_data.pause = 0;
 			break;
 		case BTN_VAL_PAUSE:
+			if(win_str_data.start == 1)	
+			{
 				win_str_data.start = 0;
 				win_str_data.pause = 1;
+			}
 			break;
 		case BTN_VAL_UNLOCK:
 				win_str_data.tank_lock_action = 1;   //请求开锁
@@ -325,7 +358,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 			win_disp_dir(MAIN_TIMER, win_str_data.use_dir);
 			if(win_str_data.start == 0 && win_str_data.pause == 0) 
 			{
-				win_str_data.disp_count_time = ((((u32)win_str_data.use_cycle * (win_str_data.use_run_time + win_str_data.use_pause_time)) - win_str_data.use_pause_time) * 60);
+				win_str_data.disp_count_time = win_calc_total_time_sec();
 				win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
 			}
 
@@ -359,7 +392,7 @@ static void win_main_btn_click_handler(u16 btn_val)
 			break;
 
 		case BTN_VAL_RATIO_SET:
-			//
+			win_change_page(RATIO_SET_PAGE);	
 			break;
 
 		case BTN_VAL_CASE:
@@ -745,8 +778,11 @@ static void win_pass_keypad_btn_click_handler(u16 btn_val)
 	if(btn_val == 12)
 	{
 		win_str_data.used_time = 0;
+		win_str_data.used_time_h = 0;
+		win_str_data.used_time_l = 0;
 		sys_write_vp(ARTNUM_UT_ADDR,(u8*)&win_str_data.used_time,2);
-  	    norflash_write(RUNTIME_MIN_HADDR,(u8*)&win_str_data.used_time,2);
+		norflash_write(RUNTIME_MIN_HADDR,(u8*)&win_str_data.used_time_h,2);
+		norflash_write(RUNTIME_MIN_LADDR,(u8*)&win_str_data.used_time_l,2);
 		win_str_data.passcode = 0;
 		sys_write_vp(ARTNUM_PASSCODE_ADDR,(u8*)&win_str_data.passcode,2);
 	}
@@ -798,7 +834,6 @@ static void win_fac_set_btn_click_handler(u16 btn_val)
 {
 	#define  BTN_VAL_PASSCODE	    0X01
 	#define  BTN_VAL_LOGO	    	0X08
-	win_str_data.factory_sel = 0;
 	switch(btn_val)
 	{
 		case BTN_VAL_PASSCODE://logo
@@ -813,7 +848,6 @@ static void win_fac_set_btn_click_handler(u16 btn_val)
 		default:
 			break;
 	}
-	win_str_data.factory_sel = btn_val;
 }
 
 void win_save_prog_paras(u16 offaddr,u8 *var_addr,u16 len)
@@ -896,6 +930,13 @@ void win_disp_level(u16 ch,u16 val)
 	if(ch & MAIN_TIMER)
 	{
 		sys_write_vp(ARTNUM_MAIN_LEVEL_ADDR,(u8 *)&val,1);
+
+		if(val > 800)
+		{
+			val = 800;
+		}
+		win_str_data.rfc = (u16)(((u32)val * 60 + 400) / 800);
+		sys_write_vp(ARTNUM_MAIN_CENTRIFUGAL_ACC_ADDR,(u8 *)&win_str_data.rfc,1);
 	}
 	if(ch & SET_TIMER)
 	{
@@ -906,6 +947,7 @@ void win_disp_level(u16 ch,u16 val)
 		sys_write_vp(ARTMUM_PROG_LEVEL_ADDR,(u8 *)&val,1);
 	}
 }
+
 
 void win_disp_cycle(u16 ch,u16 val) 
 {
@@ -1017,32 +1059,53 @@ void win_disp_dir(u16 ch, u16 val)
 	}
 				
 }
+void win_reset_grind_timer(void)
+{
+	timer_stage_sec = 0;
+	win_str_data.run_timer_state = 0;
+}
+
 u16 win_sec_timer_handle(u16* stage)
 {
 	u16 xdata ret = 0;
-	u16 xdata cycle_flag =0;
 	if(*stage == 0)//run stage
 	{
 		win_str_data.start = 1;
-		if(win_str_data.disp_run_time > 0)win_str_data.disp_run_time--;
-		if(win_str_data.disp_run_time == 0)
+		if(win_str_data.disp_run_time == 0 || ++timer_stage_sec >= 60)
 		{
-			win_str_data.disp_run_time = win_str_data.use_run_time;
-			*stage = 1;	
-			ret= 1;// return1  pause
+			timer_stage_sec = 0;
+			if(win_str_data.disp_run_time > 0)
+			{
+				win_str_data.disp_run_time--;
+			}
+			if(win_str_data.disp_run_time == 0)
+			{
+				win_str_data.disp_run_time = win_str_data.use_run_time;
+				*stage = 1;
+				ret = 1;// return1  pause
+			}
 		}
 	}
 	else if(*stage == 1)//pause stage
 	{
 		win_str_data.start = 2;
-		if(win_str_data.disp_pause_time > 0)win_str_data.disp_pause_time--;
-		if(win_str_data.disp_pause_time == 0)
+		if(win_str_data.disp_pause_time == 0 || ++timer_stage_sec >= 60)
 		{
-			win_str_data.disp_pause_time = win_str_data.use_pause_time;
-			if(win_str_data.disp_cycle > 0)
-				win_str_data.disp_cycle--;
-			*stage = 0;
-			ret= 2;  //return2 start
+			timer_stage_sec = 0;
+			if(win_str_data.disp_pause_time > 0)
+			{
+				win_str_data.disp_pause_time--;
+			}
+			if(win_str_data.disp_pause_time == 0)
+			{
+				win_str_data.disp_pause_time = win_str_data.use_pause_time;
+				if(win_str_data.disp_cycle > 0)
+				{
+					win_str_data.disp_cycle--;
+				}
+				*stage = 0;
+				ret = 2;  //return2 start
+			}
 		}
 	}
 
@@ -1060,9 +1123,9 @@ u16 win_sec_timer_handle(u16* stage)
 	return ret;
 }
 
-void win_fresh_window(SysDataDef *sys)
+void win_fresh_window(void)
 {
-	sys_write_vp(ICON_SHAK_WARRING_ADDR,(u8*)&win_str_data.shak_warning,2);
+	sys_write_vp(ICON_SHAK_WARRING_ADDR,(u8*)&win_str_data.shak_warning,1);
 	sys_write_vp(ICON_START_ADDR,(u8*)&win_str_data.start,1);
 	sys_write_vp(ICON_PAUSE_ADDR,(u8*)&win_str_data.pause,1);
 
@@ -1099,9 +1162,10 @@ void win_fresh_timer_block(void)
 {
 	static u16 timer_fresh_ratio;
 	if(timer_fresh_ratio >0) timer_fresh_ratio--;
+	else
 	{
 		timer_fresh_ratio = 50;//20hz
-		
+		sys_write_vp(ARTNUM_MAIN_LOAD_BAR_ADDR,(u8 *)&str_sys.motor_current,1);
 		if((win_str_data.start != 0)&&(win_str_data.pause == 0))  
 		{
 			win_disp_run_time(MAIN_TIMER,win_str_data.disp_run_time);
@@ -1114,7 +1178,10 @@ void win_fresh_timer_block(void)
 
 void Fresh_Service_Time(void)
 {
+	u16 xdata service_hours;
 
+	service_hours = (u16)(win_str_data.used_time / 3600);
+	sys_write_vp(ARTNUM_UT_ADDR,(u8 *)&service_hours,1);
 }
 
 
@@ -1184,6 +1251,7 @@ void disp_input_icon(void)
 //****************************????????????****************************
 void win_init(void)
 {
+	short temp;
 //1.init workbence para
 	memset(&win_str_data,0,sizeof(win_str_data));
 //2.read no flash	
@@ -1192,10 +1260,11 @@ void win_init(void)
 //3.read & load system parametes settings
 	win_load_setpara();
 //3	service time
+	norflash_read(RUNTIME_MIN_HADDR,(u8 *)&win_str_data.used_time_h,2);
+	norflash_read(RUNTIME_MIN_LADDR,(u8 *)&win_str_data.used_time_l,2);
 	win_str_data.used_time = win_str_data.used_time_h;
 	win_str_data.used_time <<= 16;
 	win_str_data.used_time |= win_str_data.used_time_l;
-	win_str_data.disp_time = win_str_data.used_time/3600;
 //4 program group
 	if(win_str_data.prog_grp > 20 || win_str_data.prog_grp == 0)
 	{
@@ -1213,10 +1282,13 @@ void win_init(void)
 	win_load_prog_paras(PROG_LEVEL_OFFSET,(u8*)&win_str_data.prog_level,6);
 	memcpy((u8*)&win_str_data.use_level,(u8*)&win_str_data.prog_level,10);
 
+	temp = 1;
+	sys_write_vp(0X200D,(u8*)&temp,1);
+	temp = -20;
+	sys_write_vp(0X200C,(u8*)&temp,1);
 //10. calc level vs voltage function
 	win_calc_function();
 	sys_delay_about_ms(6000);
 //11. jump work page	
 
-	win_change_page(WORK_PAGE);
 }

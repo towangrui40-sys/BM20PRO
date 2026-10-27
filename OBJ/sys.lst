@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 1   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SYS
@@ -62,7 +62,7 @@ line level    source
   51   1      
   52   1      }
   53          
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 2   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 2   
 
   54          
   55          //软件大致延时,单位ms
@@ -126,7 +126,7 @@ line level    source
  113   3            *buf++ = DATA0;                      
  114   3            i = 0;
  115   3            len--;  
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 3   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 3   
 
  116   3          }
  117   2        }
@@ -190,7 +190,7 @@ line level    source
  175   1        if(delay_tick)    delay_tick--;
  176   1        //产生按钮点击扫描信号
  177   1        btn_click_tick();
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 4   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 4   
 
  178   1      
  179   1        //通讯接收超时
@@ -254,7 +254,7 @@ line level    source
  237   1        sys_write_vp(shape_data[0],(u8*)(shape_data+1),len/2);
  238   1      }
  239          //切换界面
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 5   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 5   
 
  240          void sys_disp_page(u16 page)
  241          {
@@ -318,7 +318,7 @@ line level    source
  299          //}
  300          /////////////////////////////////////////////////// 
 
-C51 COMPILER V9.60.7.0   SYS                                                               10/23/2026 09:28:26 PAGE 6   
+C51 COMPILER V9.60.7.0   SYS                                                               10/27/2026 13:38:44 PAGE 6   
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

@@ -48,7 +48,6 @@ void main(void)
 	{
 		Execute_Task_List_RUN();
 		T5L_HMIslvSub();
-		
 	}
 }
 

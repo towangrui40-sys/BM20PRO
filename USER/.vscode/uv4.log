@@ -1,6 +1,7 @@
 Build target 'TEMPLATE'
+compiling start_win.c...
 linking...
-Program Size: data=45.2 xdata=4619 const=841 code=23505
+Program Size: data=45.2 xdata=4613 const=841 code=24888
 creating hex file from "..\OBJ\T5_HMI_V1.0"...
 "..\OBJ\T5_HMI_V1.0" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:05

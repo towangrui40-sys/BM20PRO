@@ -13,6 +13,7 @@ void tank2_material(void);
 #define RED     0x01
 #define GREEN   0x02
 #define POWER_ON_DELAY_TICKS  12   //12 * 250ms = 3s
+#define MOTOR_STOP_DELAY_TICKS 40  //20 * 250ms = 5s，等待机械完全停下
 
 TaskTime xdata TasksPare[Task_Num];
 extern code const Product_TypeDef product_data[PRODUCT_TOTAL];
@@ -54,7 +55,7 @@ void Task_Timer_Sec(void)
 
 	if(win_str_data.state == FSM_READY)
 	{
-		win_str_data.run_timer_state = 0;
+		win_reset_grind_timer();
 		if(spk)
 		{
 			spk--;
@@ -106,8 +107,6 @@ void Task_Timer_Sec(void)
 			win_str_data.used_time++;
 		}
 	}
-
-	sys_write_vp(0x200b,(u8 *)&win_str_data.state,1);
 
 	if(win_str_data.state == FSM_READY)
 	{
@@ -400,7 +399,7 @@ void Run_FSM(void)
 			{
 				if(str_sys.location_test != 0x01 && str_sys.location_test != 0x02)
 				{
-					win_change_page(POPUP_LOCKING);    //等待界面，页面38
+					win_change_page(POPUP_CASE);    //等待界面，页面38
 					RTU_Cmd_Pending(RTU_STOP,MC_STOP);
 					win_str_data.state = FSM_CLOSE_LOCK_TO_RUN;
 					win_str_data.fsm_tick = 2;
@@ -428,25 +427,155 @@ void Run_FSM(void)
 			if(str_sys.case_state == CLOSE_PLACE)      //盖子关到位
 			{
 				win_change_page(WORK_PAGE);
-				win_str_data.state = FSM_READY;
+				if(win_str_data.pause == 1)            //暂停中的维护流程，保留本轮进度
+				{
+					win_disp_run_time(MAIN_TIMER,win_str_data.disp_run_time);
+					win_disp_pause_time(MAIN_TIMER,win_str_data.disp_pause_time);
+					win_disp_cycle(MAIN_TIMER,win_str_data.disp_cycle);
+					win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
+					win_disp_level(MAIN_TIMER,win_str_data.use_level);
+					win_str_data.state = FSM_PAUSE;
+				}
+				else
+				{
+					win_str_data.state = FSM_READY;
+				}
 			}
 			break;
 		case FSM_READY:
-				if(win_str_data.lid_cmd == 0x11)	//open lid
+		/**************显示值设定为设置值*******************/
+				win_str_data.disp_cycle = win_str_data.use_cycle;
+				win_str_data.disp_run_time = win_str_data.use_run_time;
+				win_str_data.disp_pause_time = win_str_data.use_pause_time;
+				win_str_data.disp_count_time = win_calc_total_time_sec();
+				win_disp_level(MAIN_TIMER,win_str_data.use_level);
+				/**************************************************/
+				if(win_str_data.start == 1)    //接收到win_str_data.start = 1开始信号
 				{
-					win_change_page(POPUP_DETECT_TURN);    //等待界面，页面38
-					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
-					Send_voltage_service(20);      //发送20rpm对应的转速
-					win_str_data.lid_cmd = 0x01;
-					win_str_data.bowl_tick = 30;
-					
-					temp = 0;
-					sys_write_vp(ICON_BOWL1_TEST_CH_ADDR,(u8*)&temp,2);
-					sys_write_vp(ICON_BOWL2_TEST_CH_ADDR,(u8*)&temp,2);
+					win_str_data.state = FSM_START;
+				}
+				else
+				{
+					if(win_str_data.lid_cmd == 0x11)	//open lid
+					{
+						win_change_page(POPUP_DETECT_TURN);   //切换检测转盘位置界面
+ 						Send_voltage_service(18);
+						RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+						
+						win_str_data.lid_cmd = 0x01;
+					}
 				}
 
 			break;
+	case FSM_START:/*******************************************状态机：开始状态********************************/
+					Send_voltage_service(win_str_data.use_level);
+					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);//BM反转模式第一次为正转
+					win_str_data.nm_dir_flag = 0;
+					
+					win_str_data.state = FSM_RUN;   //切换到运行状态 update fsm
+			break;
+		case FSM_RUN:/*******************************************状态机：运行状态*************************************/   //运行过程中
+				Send_voltage_service(win_str_data.use_level);
+				if(win_str_data.disp_count_time == 0)
+				{
+					win_str_data.start = 0;
+				}
+				
+			  if(win_str_data.pause == 1)/********** pause = 1暂停信号 pause = 0无暂停信号******************************/
+				{
+					RTU_Cmd_Pending(RTU_STOP,MC_STOP);   //send motor stop
+					win_str_data.fsm_tick = MOTOR_STOP_DELAY_TICKS;
+					win_str_data.state = FSM_PAUSE_STOPPING;
+					win_change_page(WORK_PAGE_NO_TOUCH);  //切换到主界面
+				}							
+			  else if(win_str_data.start == 0) //start = 0停止信号 start = 1 运行信号
+				{
+					RTU_Cmd_Pending(RTU_STOP,MC_STOP);   //研磨电机停止
 
+					win_str_data.fsm_tick = MOTOR_STOP_DELAY_TICKS;
+					win_str_data.state = FSM_STOP_STOPPING;
+					win_change_page(WORK_PAGE_NO_TOUCH);  //切换到主界面
+				}
+				if(str_sys.read_speed >= (win_str_data.use_level - 5)) str_sys.read_speed  = win_str_data.use_level;
+				win_disp_level(MAIN_TIMER,str_sys.read_speed);
+				if(str_sys.str_mems_z <= 0) str_sys.str_mems_z = 0;
+				if(str_sys.str_mems_z > win_str_data.shake)    /**********************震动过大保护**************/
+				{
+					RTU_Cmd_Pending(RTU_STOP,MC_STOP);   //send motor stop
+					win_str_data.start = 0;
+					win_str_data.pause = 1;
+					win_str_data.shak_warning = 1; 
+				}
+/************************************************************************************************************/
+			break;
+
+		case FSM_PAUSE_STOPPING:
+				win_disp_level(MAIN_TIMER,str_sys.read_speed);
+				if(win_str_data.fsm_tick == 0)
+				{
+					if(win_str_data.shak_warning == 1)
+						win_change_page(WORK_SHAKE_WARNING_PAGE);
+					else
+						win_change_page(WORK_PAGE);  //切换到主界面
+					win_str_data.state = FSM_PAUSE;
+				}
+			break;
+
+		case FSM_STOP_STOPPING:
+				win_disp_level(MAIN_TIMER,str_sys.read_speed);
+				if(win_str_data.fsm_tick == 0)
+				{
+					win_change_page(WORK_PAGE);
+					win_str_data.state = FSM_STOP;
+				}
+			break;
+
+		case FSM_PAUSE: /*****************************************状态机：暂停状态********************************/
+				if((win_str_data.start == 1) && (win_str_data.pause == 0))     //点运行按钮,恢复运行
+				{
+					if(win_str_data.run_timer_state == 0)  //运行阶段才立即启动电机
+					{
+						Send_voltage_service(win_str_data.use_level);
+						if(win_str_data.nm_dir_flag == 0)
+						{
+							RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+						}
+						else
+						{
+							RTU_Cmd_Pending(RTU_RUN_REV,MC_REV);
+						}
+					}
+					win_str_data.state = FSM_RUN;   				//FSM to FSM_RUN
+				}
+				if((win_str_data.start == 0) && (win_str_data.pause == 0))      //接收到Start_win  start=0停止信号
+				{
+					win_str_data.state = FSM_STOP;
+				}
+				if(win_str_data.lid_cmd == 0x11)	//open lid
+				{
+					win_change_page(POPUP_DETECT_TURN);   //切换检测转盘位置界面
+					Send_voltage_service(18);
+					RTU_Cmd_Pending(RTU_RUN_FWD,MC_FWD);
+					
+					win_str_data.lid_cmd = 0x01;
+				}
+			break;
+
+		case FSM_STOP:
+			    win_str_data.fan_tick = 0;
+				win_str_data.used_time_l = win_str_data.used_time & 0xffff;  //Save used time
+				win_str_data.used_time_h = (win_str_data.used_time>>16) & 0xffff; 
+				norflash_write(RUNTIME_MIN_HADDR,(u8*)&win_str_data.used_time_h,2);
+				norflash_write(RUNTIME_MIN_LADDR,(u8*)&win_str_data.used_time_l,2);
+		
+				win_disp_run_time(MAIN_TIMER,win_str_data.use_run_time);
+				win_disp_pause_time(MAIN_TIMER,win_str_data.use_pause_time);
+				win_disp_cycle(MAIN_TIMER,win_str_data.use_cycle);
+				win_str_data.disp_count_time = win_calc_total_time_sec();
+				win_disp_count_time(MAIN_TIMER,win_str_data.disp_count_time);
+		
+				win_str_data.state = FSM_READY;
+			break;
 		default:
 			break;
 
@@ -457,7 +586,7 @@ void HFPeriod_1msTask(void)
 {
 	btn_click_handler();
 	rtu_response_handler();
-	win_fresh_window(&str_sys);
+	win_fresh_window();
 
 	if(win_str_data.state == FSM_INIT_WAIT_POS2 && str_sys.location_test == 0x02)
 	{

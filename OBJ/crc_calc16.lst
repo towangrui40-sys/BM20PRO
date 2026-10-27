@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 1   
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/23/2026 15:58:47 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CRC_CALC16
@@ -62,7 +62,7 @@ line level    source
   51          
   52          unsigned short CRC16_CCITT(unsigned char *puchMsg, unsigned int usDataLen)
   53          {
-C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 2   
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/23/2026 15:58:47 PAGE 2   
 
   54   1          unsigned short wCRCin = 0x0000;
   55   1          unsigned short wCPoly = 0x1021;
@@ -126,7 +126,7 @@ line level    source
  113   1          {
  114   2              wChar = *(puchMsg++);
  115   2              wCRCin ^= (wChar << 8);
-C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 3   
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/23/2026 15:58:47 PAGE 3   
 
  116   2      
  117   2              for( i = 0; i < 8; i++)
@@ -190,7 +190,7 @@ line level    source
  175   3                  {
  176   4                      wCRCin = (wCRCin << 1) ^ wCPoly;
  177   4                  }
-C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 4   
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/23/2026 15:58:47 PAGE 4   
 
  178   3                  else
  179   3                  {
@@ -254,7 +254,7 @@ line level    source
  237   4                  }
  238   3              }
  239   2          }
-C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/12/2026 15:12:37 PAGE 5   
+C51 COMPILER V9.60.7.0   CRC_CALC16                                                        10/23/2026 15:58:47 PAGE 5   
 
  240   1          InvertUint16(&wCRCin, &wCRCin);
  241   1          return (wCRCin^0xFFFF) ;

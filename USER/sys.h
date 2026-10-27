@@ -131,8 +131,9 @@ typedef enum
 	FSM_READY = 1,                     // 就绪/待机
 	FSM_START = 2,                     // 启动电机
 	FSM_RUN = 3,                       // 正常运行
+	FSM_PAUSE_STOPPING = 6,            // 暂停前固定延时等待机械减速
 	FSM_PAUSE = 4,                     // 暂停
-	FSM_STOPPING = 6,                  // 等待电机减速到零
+	FSM_STOP_STOPPING = 29,            // 停止前固定延时等待机械减速
 	FSM_STOP = 5,                      // 停止
 
 	/* initialization */

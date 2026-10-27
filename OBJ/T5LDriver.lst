@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 1   
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/23/2026 15:58:56 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE T5LDRIVER
@@ -62,7 +62,7 @@ line level    source
   51   1        SCON2R=0x80;
   52   1        BODE2_DIV_H=0x00; //波特率=FCLK/8*DIV  T5L  s4_s5_25804800/9600=2688=0X0A80 S4_S5_ 115200=00E0   s2_11520
              -0=03E4 S2_9600=02B0
-C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 2   
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/23/2026 15:58:56 PAGE 2   
 
   53   1        BODE2_DIV_L=0xe0;    //波特率为： 115200
   54   1        ES2T=1;
@@ -126,7 +126,7 @@ line level    source
  112   3          }
  113   2          APP_EN=1;
  114   2          while (APP_EN==1);
-C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 3   
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/23/2026 15:58:56 PAGE 3   
 
  115   2          if(len==1)
  116   2          {
@@ -190,7 +190,7 @@ line level    source
  174   1        unsigned int i;
  175   1      
  176   1        if (len==0) return 1; 
-C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 4   
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/23/2026 15:58:56 PAGE 4   
 
  177   1      
  178   1        i=(unsigned char)(dgus_addr&0x01); //起始地址奇偶判断
@@ -254,7 +254,7 @@ line level    source
  236   3          }
  237   2          APP_EN=1;
  238   2          while (APP_EN==1);
-C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/12/2026 15:12:45 PAGE 5   
+C51 COMPILER V9.60.7.0   T5LDRIVER                                                         10/23/2026 15:58:56 PAGE 5   
 
  239   2        }
  240   1        RAMMODE=0x00;
